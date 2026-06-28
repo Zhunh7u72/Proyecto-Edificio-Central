@@ -1,8 +1,9 @@
 #toda la libreria docs no se debe subir
 Docs/
+.env
+node_modules/
 
 # dependencies
-/node_modules
 /.pnp
 .pnp.*
 .yarn/*
