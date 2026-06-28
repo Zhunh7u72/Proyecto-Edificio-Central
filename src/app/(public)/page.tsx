@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin as supabase } from '@/lib/supabase'
 import EventCard from '@/components/EventCard'
 import styles from './page.module.css'
 
