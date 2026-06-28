@@ -1,0 +1,112 @@
+.card {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.cardImageWrapper {
+  position: relative;
+}
+
+.cardImagePlaceholder {
+  height: 180px;
+  background: linear-gradient(135deg, var(--color-bg-alt) 0%, #e8e8ef 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardImageIcon {
+  font-size: 3rem;
+  opacity: 0.4;
+}
+
+.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badgeEvento {
+  background: rgba(9, 83, 151, 0.9);
+  color: #fff;
+}
+
+.badgeAnuncio {
+  background: rgba(209, 10, 17, 0.9);
+  color: #fff;
+}
+
+.badgeCapacitacion {
+  background: rgba(22, 163, 74, 0.9);
+  color: #fff;
+}
+
+.cardBody {
+  padding: var(--spacing-lg);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.date {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.excerpt {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.cardFooter {
+  margin-top: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.deadline {
+  font-size: 0.78rem;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.readMore {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-secondary);
+  transition: color var(--transition-fast);
+}
+
+.readMore:hover {
+  color: var(--color-primary);
+}

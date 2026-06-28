@@ -1,0 +1,61 @@
+.loginWrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0b162a 0%, #063d6e 100%);
+  padding: 1rem;
+}
+
+.loginContainer {
+  background: var(--color-bg);
+  width: 100%;
+  max-width: 400px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: 2.5rem;
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+.loginHeader h2 {
+  font-size: 1.4rem;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.loginHeader p {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.loginForm {
+  margin-bottom: 1.5rem;
+}
+
+.loginFooter {
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.5rem;
+}
+
+.backLink {
+  color: var(--color-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.backLink:hover {
+  color: var(--color-primary);
+}
