@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin as supabase } from '@/lib/supabase'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'

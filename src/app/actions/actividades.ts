@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import { getSession } from '@/lib/session'
 import { revalidatePath } from 'next/cache'
 
@@ -25,7 +25,7 @@ export async function crearActividad(
     return { error: 'El título y tipo son obligatorios.' }
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('actividades')
     .insert({
       id_usuario: session.userId,
@@ -49,7 +49,7 @@ export async function eliminarActividad(id: number): Promise<ActividadState> {
   const session = await getSession()
   if (!session) return { error: 'No autorizado.' }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('actividades')
     .delete()
     .eq('id_actividad', id)

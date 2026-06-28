@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import { createSession, deleteSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import bcrypt from 'bcryptjs'
@@ -18,7 +18,7 @@ export async function login(state: LoginState, formData: FormData): Promise<Logi
   }
 
   // Buscar usuario con rol Administrador FEUE
-  const { data: usuario, error } = await supabase
+  const { data: usuario, error } = await supabaseAdmin
     .from('usuarios')
     .select('*')
     .eq('correo', correo)

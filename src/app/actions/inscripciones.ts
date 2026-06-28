@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 
 export type InscripcionState = {
@@ -22,7 +22,7 @@ export async function inscribirEstudiante(
   }
 
   // Verificar que la actividad existe y tiene inscripción abierta
-  const { data: actividad, error: actError } = await supabase
+  const { data: actividad, error: actError } = await supabaseAdmin
     .from('actividades')
     .select('*')
     .eq('id_actividad', id_actividad)
@@ -42,7 +42,7 @@ export async function inscribirEstudiante(
   // Buscar o crear usuario estudiante
   let userId: number
 
-  const { data: existingUser } = await supabase
+  const { data: existingUser } = await supabaseAdmin
     .from('usuarios')
     .select('id_usuario')
     .eq('correo', correo)
@@ -51,7 +51,7 @@ export async function inscribirEstudiante(
   if (existingUser) {
     userId = existingUser.id_usuario
   } else {
-    const { data: newUser, error: createError } = await supabase
+    const { data: newUser, error: createError } = await supabaseAdmin
       .from('usuarios')
       .insert({
         nombres,
@@ -69,7 +69,7 @@ export async function inscribirEstudiante(
   }
 
   // Verificar si ya está inscrito
-  const { data: existing } = await supabase
+  const { data: existing } = await supabaseAdmin
     .from('matriculas_eventos')
     .select('id_matricula')
     .eq('id_usuario', userId)
@@ -81,7 +81,7 @@ export async function inscribirEstudiante(
   }
 
   // Inscribir
-  const { error: enrollError } = await supabase
+  const { error: enrollError } = await supabaseAdmin
     .from('matriculas_eventos')
     .insert({
       id_usuario: userId,
