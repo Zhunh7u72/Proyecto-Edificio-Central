@@ -35,7 +35,7 @@ export default function LoginPage() {
               id="correo" 
               name="correo" 
               className="form-input" 
-              placeholder="admin@utn.edu.ec"
+              placeholder="Correo"
               required 
             />
           </div>
@@ -47,7 +47,7 @@ export default function LoginPage() {
               id="password" 
               name="password" 
               className="form-input" 
-              placeholder="••••••••"
+              placeholder="password"
               required 
             />
           </div>

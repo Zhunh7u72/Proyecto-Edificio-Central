@@ -19,7 +19,7 @@ export default async function HomePage() {
         <div className={styles.heroOverlay}>
           <div className={`container ${styles.heroContent}`}>
             <h1 className={styles.heroTitle}>
-              Edificio Central
+              Federación de Estudiantes Universitarios del Ecuador
             </h1>
             <p className={styles.heroSubtitle}>
               Universidad Técnica del Norte — Ciencia y Técnica al Servicio del Pueblo

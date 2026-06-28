@@ -17,7 +17,6 @@ export default function Header() {
             <a href="https://www.utn.edu.ec" target="_blank" rel="noopener noreferrer">
               Portal UTN
             </a>
-            <Link href="/admin/login">Administración</Link>
           </div>
         </div>
       </div>
@@ -32,7 +31,7 @@ export default function Header() {
               className={styles.logo}
             />
             <div className={styles.brandText}>
-              <span className={styles.brandTitle}>Edificio Central</span>
+              <span className={styles.brandTitle}>FEUE</span>
               <span className={styles.brandSubtitle}>UTN</span>
             </div>
           </Link>
@@ -49,12 +48,7 @@ export default function Header() {
 
           <ul className={`${styles.navLinks} ${menuOpen ? styles.navLinksOpen : ''}`}>
             <li><Link href="/" onClick={() => setMenuOpen(false)}>Inicio</Link></li>
-            <li><Link href="/institucional" onClick={() => setMenuOpen(false)}>Institucional</Link></li>
-            <li>
-              <Link href="/admin/login" className="btn btn-primary btn-sm" onClick={() => setMenuOpen(false)}>
-                Acceso Admin
-              </Link>
-            </li>
+            <li><Link href="/institucional" onClick={() => setMenuOpen(false)}>Institucional</Link></li>            
           </ul>
         </div>
       </nav>

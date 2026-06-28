@@ -6,26 +6,26 @@
    ==================================================================== */
 
 :root {
-  /* Colores principales */
-  --color-primary: #D10A11;
-  --color-primary-dark: #a30810;
-  --color-primary-light: #ff1a22;
-  --color-secondary: #095397;
-  --color-secondary-dark: #063d6e;
-  --color-secondary-light: #1a6fc2;
+  /* Colores principales UTN (Paleta Exacta) */
+  --color-primary: #B30000;
+  --color-primary-dark: #8c0000;
+  --color-primary-light: #e60000;
+  --color-secondary: #212529; /* Usando Negro/Gris Carbón como color secundario principal */
+  --color-secondary-dark: #121416;
+  --color-secondary-light: #343a40;
 
   /* Neutrales */
-  --color-bg: #ffffff;
-  --color-bg-alt: #f5f5f7;
-  --color-bg-dark: #0b162a;
-  --color-text: #1a1a1a;
-  --color-text-muted: #6b6b6b;
-  --color-text-light: #ffffff;
-  --color-border: #e0e0e0;
+  --color-bg: #FFFFFF; /* Blanco Puro */
+  --color-bg-alt: #F8F9FA; /* Gris Claro */
+  --color-bg-dark: #212529; /* Gris Carbón */
+  --color-text: #212529;
+  --color-text-muted: #6c757d;
+  --color-text-light: #FFFFFF;
+  --color-border: #e9ecef;
 
   /* Footer */
-  --color-footer: #0b162a;
-  --color-footer-text: #c0c6ce;
+  --color-footer: #212529;
+  --color-footer-text: #F8F9FA;
 
   /* Tipografía */
   --font-primary: 'Roboto', sans-serif;
