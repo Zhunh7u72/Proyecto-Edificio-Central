@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { inscribirEstudiante } from '@/app/actions/inscripciones'
+import LoadingOverlay from '@/components/LoadingOverlay'
 import styles from './EnrollForm.module.css'
 
 interface EnrollFormProps {
@@ -23,6 +24,7 @@ export default function EnrollForm({ idActividad }: EnrollFormProps) {
 
   return (
     <div className={styles.formContainer}>
+      <LoadingOverlay show={isPending} />
       <h3 className={styles.formTitle}>Formulario de Inscripción</h3>
       <p className={styles.formSubtitle}>Llena tus datos para registrarte en este evento.</p>
 

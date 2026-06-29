@@ -1,4 +1,7 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { ACTIVIDADES_SELECT, getRutaImagenActividad } from '@/lib/actividad-archivos'
+import { fetchComentariosActividad } from '@/lib/comentarios-query'
+import CommentsSection from '@/components/CommentsSection'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import EnrollForm from '@/components/EnrollForm'
@@ -16,7 +19,7 @@ export default async function EventPage({ params }: EventPageProps) {
   // Obtener actividad
   const { data: actividad, error } = await supabase
     .from('actividades')
-    .select('*, usuarios(nombres, apellidos)')
+    .select(`${ACTIVIDADES_SELECT}, usuarios(nombres, apellidos)`)
     .eq('id_actividad', parseInt(id))
     .single()
 
@@ -35,8 +38,10 @@ export default async function EventPage({ params }: EventPageProps) {
   })
   
   const esInscripcionAbierta = actividad.fecha_limite_inscripcion && new Date() <= new Date(actividad.fecha_limite_inscripcion)
-  
-  return (
+  const urlImagen = getRutaImagenActividad(actividad)
+
+  const { comentarios } = await fetchComentariosActividad(actividad.id_actividad)
+    return (
     <div className={styles.pageWrapper}>
       {/* HEADER DE LA ACTIVIDAD */}
       <div className={styles.header}>
@@ -54,6 +59,11 @@ export default async function EventPage({ params }: EventPageProps) {
       <div className={`container ${styles.contentGrid}`}>
         {/* COLUMNA PRINCIPAL */}
         <div className={styles.mainCol}>
+          {urlImagen && (
+            <div className={styles.heroImage}>
+              <img src={urlImagen} alt={actividad.titulo} />
+            </div>
+          )}
           <div className={styles.contentBox}>
             <h3 className={styles.sectionTitle}>Detalles de la Actividad</h3>
             <div className={styles.description}>
@@ -65,10 +75,11 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
           </div>
           
-          {/* Aquí iría la sección de Comentarios y Archivos según el diseño */}
           <div className={styles.contentBox} style={{ marginTop: '2rem' }}>
-            <h3 className={styles.sectionTitle}>Material y Comentarios</h3>
-            <p style={{ color: 'var(--color-text-muted)' }}>Módulo en construcción...</p>
+            <CommentsSection
+              idActividad={actividad.id_actividad}
+              comentarios={comentarios}
+            />
           </div>
         </div>
 

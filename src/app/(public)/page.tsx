@@ -1,14 +1,15 @@
+import Link from 'next/link'
 import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { ACTIVIDADES_SELECT, getRutaImagenActividad } from '@/lib/actividad-archivos'
 import EventCard from '@/components/EventCard'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  // Obtener actividades de Supabase
   const { data: actividades, error } = await supabase
     .from('actividades')
-    .select('*')
+    .select(ACTIVIDADES_SELECT)
     .order('fecha_publicacion', { ascending: false })
     .limit(9)
 
@@ -40,26 +41,36 @@ export default async function HomePage() {
       <section className={styles.quickAccess}>
         <div className="container">
           <div className={styles.quickGrid}>
-            <div className={styles.quickCard}>
+            <Link href="/#actividades" className={styles.quickCard}>
               <span className={styles.quickIcon}>📢</span>
               <h3>Anuncios</h3>
               <p>Últimas noticias y comunicados del Edificio Central</p>
-            </div>
-            <div className={styles.quickCard}>
+            </Link>
+            <Link href="/#actividades" className={styles.quickCard}>
               <span className={styles.quickIcon}>🎓</span>
               <h3>Eventos</h3>
               <p>Inscríbete a eventos académicos y culturales</p>
-            </div>
-            <div className={styles.quickCard}>
+            </Link>
+            <Link href="/galeria" className={styles.quickCard}>
+              <span className={styles.quickIcon}>📷</span>
+              <h3>Galería</h3>
+              <p>Fotografías de actividades y eventos institucionales</p>
+            </Link>
+            <Link href="/documentos" className={styles.quickCard}>
+              <span className={styles.quickIcon}>📄</span>
+              <h3>Documentos PDF</h3>
+              <p>Descarga documentos oficiales en formato PDF</p>
+            </Link>
+            <Link href="/#actividades" className={styles.quickCard}>
               <span className={styles.quickIcon}>📚</span>
               <h3>Capacitaciones</h3>
               <p>Cursos y talleres disponibles para estudiantes</p>
-            </div>
-            <div className={styles.quickCard}>
+            </Link>
+            <Link href="/institucional" className={styles.quickCard}>
               <span className={styles.quickIcon}>🏛️</span>
               <h3>Institucional</h3>
               <p>Misión, visión y directorio de la universidad</p>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
@@ -91,6 +102,7 @@ export default async function HomePage() {
                   tipo={act.tipo}
                   fecha_publicacion={act.fecha_publicacion}
                   fecha_limite_inscripcion={act.fecha_limite_inscripcion}
+                  url_imagen={getRutaImagenActividad(act)}
                 />
               ))}
             </div>
