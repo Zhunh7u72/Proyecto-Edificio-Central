@@ -7,9 +7,9 @@
 
 :root {
   /* Colores principales UTN (Paleta Exacta) */
-  --color-primary: #B30000;
+  --color-primary: #3a3939;
   --color-primary-dark: #8c0000;
-  --color-primary-light: #e60000;
+  --color-primary-light: #d10a11;
   --color-secondary: #212529; /* Usando Negro/Gris Carbón como color secundario principal */
   --color-secondary-dark: #121416;
   --color-secondary-light: #343a40;
@@ -132,7 +132,7 @@ button {
   display: inline-block;
   width: 50px;
   height: 4px;
-  background: var(--color-primary);
+  background-color:#3a3939;
   border-radius: 2px;
   margin-bottom: var(--spacing-md);
 }
@@ -371,7 +371,7 @@ button {
 }
 
 .badge-evento {
-  background: rgba(9, 83, 151, 0.1);
+  background: #706f6f;;
   color: var(--color-secondary);
 }
 

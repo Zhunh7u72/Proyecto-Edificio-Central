@@ -6,7 +6,7 @@
 .hero {
   position: relative;
   min-height: 480px;
-  background: linear-gradient(135deg, #8a0000 0%, #b30000 100%);
+  background-color: #d10a11;
   display: flex;
   align-items: center;
 }

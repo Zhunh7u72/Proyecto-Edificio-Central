@@ -8,6 +8,8 @@ interface EventCardProps {
   tipo: string
   fecha_publicacion: string
   fecha_limite_inscripcion: string | null
+  // 1. Añadimos la propiedad para recibir la URL de la imagen
+  imagenUrl?: string | null 
 }
 
 export default function EventCard({
@@ -17,6 +19,7 @@ export default function EventCard({
   tipo,
   fecha_publicacion,
   fecha_limite_inscripcion,
+  imagenUrl, // 2. Extraemos la propiedad
 }: EventCardProps) {
   const badgeClass =
     tipo === 'Evento'
@@ -34,9 +37,16 @@ export default function EventCard({
   return (
     <div className={styles.card}>
       <div className={styles.cardImageWrapper}>
-        <div className={styles.cardImagePlaceholder}>
-          <span className={styles.cardImageIcon}>📰</span>
-        </div>
+        
+        {/* 3. Lógica para mostrar la imagen real o el placeholder */}
+        {imagenUrl ? (
+          <img src={imagenUrl} alt={titulo} className={styles.cardImage} />
+        ) : (
+          <div className={styles.cardImagePlaceholder}>
+            <span className={styles.cardImageIcon}></span>
+          </div>
+        )}
+
         <span className={`${styles.badge} ${badgeClass}`}>{tipo}</span>
       </div>
       <div className={styles.cardBody}>
