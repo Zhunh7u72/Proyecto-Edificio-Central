@@ -28,7 +28,7 @@ export default function Header() {
       </div>
 
       <nav className={styles.navbar}>
-        <div className={`container ${styles.navInner}`}>
+        <div className={styles.navInner}>
           <Link href="/" className={styles.brand} onClick={closeMenu}>
             <img
               src="/logo-feue.jpeg"

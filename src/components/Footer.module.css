@@ -4,6 +4,13 @@
   padding-top: var(--spacing-3xl);
 }
 
+.footerInner {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
 .footerGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
@@ -14,7 +21,7 @@
 .col {}
 
 .colTitle {
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--color-text-light);
   margin-bottom: var(--spacing-lg);
@@ -34,8 +41,8 @@
 }
 
 .colText {
-  font-size: 0.9rem;
-  line-height: 1.7;
+  font-size: 1.05rem;
+  line-height: 1.75;
   color: var(--color-footer-text);
 }
 
@@ -44,8 +51,8 @@
 }
 
 .links li {
-  font-size: 0.9rem;
-  padding: 0.35rem 0;
+  font-size: 1.05rem;
+  padding: 0.45rem 0;
   color: var(--color-footer-text);
 }
 
@@ -62,8 +69,8 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: var(--spacing-lg) 0;
   text-align: center;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 @media (max-width: 768px) {

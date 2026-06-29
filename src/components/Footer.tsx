@@ -3,7 +3,8 @@ import styles from './Footer.module.css'
 export default function Footer() {
   return (
     <footer className={styles.footer}>
-      <div className={`container ${styles.footerGrid}`}>
+      <div className={styles.footerInner}>
+        <div className={styles.footerGrid}>
         {/* Columna 1 - Sobre */}
         <div className={styles.col}>
           <h4 className={styles.colTitle}>Edificio Central</h4>
@@ -34,10 +35,11 @@ export default function Footer() {
             <li>Tel: (06) 299 7800</li>
           </ul>
         </div>
+        </div>
       </div>
 
       <div className={styles.footerBottom}>
-        <div className="container">
+        <div className={styles.footerInner}>
           <p>© {new Date().getFullYear()} Universidad Técnica del Norte — Edificio Central. Todos los derechos reservados.</p>
         </div>
       </div>
