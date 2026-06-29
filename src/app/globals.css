@@ -139,7 +139,7 @@ button {
   display: inline-block;
   width: 50px;
   height: 4px;
-  background: var(--color-primary);
+  background-color:#3a3939;
   border-radius: 2px;
   margin-bottom: var(--spacing-md);
 }
@@ -378,7 +378,7 @@ button {
 }
 
 .badge-evento {
-  background: rgba(9, 83, 151, 0.1);
+  background: #706f6f;;
   color: var(--color-secondary);
 }
 

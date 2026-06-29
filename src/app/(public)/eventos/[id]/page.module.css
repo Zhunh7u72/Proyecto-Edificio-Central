@@ -5,7 +5,7 @@
 }
 
 .header {
-  background: var(--color-bg-dark);
+  background:#3a3939;
   color: #fff;
   padding: var(--spacing-2xl) 0 var(--spacing-3xl);
   border-bottom: 5px solid var(--color-primary);

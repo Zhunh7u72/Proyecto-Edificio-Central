@@ -31,8 +31,8 @@ export default function Header() {
         <div className={`container ${styles.navInner}`}>
           <Link href="/" className={styles.brand} onClick={closeMenu}>
             <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKsTaAxYxsfEjB4Go6B3ucJ-17d-ayMWMsGlCGDD99R8Ocx7Jh61hAm_P&s=10"
-              alt="Logo UTN"
+              src="/logo-feue.jpeg"
+              alt="Logo FEUE"
               className={styles.logo}
             />
             <div className={styles.brandText}>
@@ -62,6 +62,9 @@ export default function Header() {
             <li>
               <Link href="/documentos" onClick={closeMenu}>Documentos</Link>
             </li>
+            <li>
+              <Link href="/institucional" onClick={closeMenu}>Institucional</Link>
+            </li>
 
             <li
               className={`${styles.dropdown} ${feueOpen ? styles.dropdownOpen : ''}`}
@@ -83,16 +86,17 @@ export default function Header() {
               <ul className={styles.dropdownMenu}>
                 {INFORMACION_SECTIONS.map((item) => (
                   <li key={item.slug}>
-                    <Link
-                      href={`/informacion/${item.slug}`}
-                      onClick={closeMenu}
-                    >
+                    <Link href={`/informacion/${item.slug}`} onClick={closeMenu}>
                       {item.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </li> 
+            </li>
+
+            <li>
+              <Link href="/admin/login" onClick={closeMenu}>Login</Link>
+            </li>
           </ul>
         </div>
       </nav>

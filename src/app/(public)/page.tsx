@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { supabaseAdmin as supabase } from '@/lib/supabase'
 import { ACTIVIDADES_SELECT, getRutaImagenActividad } from '@/lib/actividad-archivos'
 import EventCard from '@/components/EventCard'
+import HeroSlider from '@/components/HeroSlider'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -15,27 +16,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* HERO SECTION */}
-      <section className={styles.hero}>
-        <div className={styles.heroOverlay}>
-          <div className={`container ${styles.heroContent}`}>
-            <h1 className={styles.heroTitle}>
-              Federación de Estudiantes Universitarios del Ecuador
-            </h1>
-            <p className={styles.heroSubtitle}>
-              Universidad Técnica del Norte — Ciencia y Técnica al Servicio del Pueblo
-            </p>
-            <div className={styles.heroActions}>
-              <a href="#actividades" className="btn btn-primary btn-lg">
-                Ver Actividades
-              </a>
-              <a href="/institucional" className="btn btn-outline btn-lg" style={{ borderColor: '#fff', color: '#fff' }}>
-                Conocer más
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSlider />
 
       {/* ACCESOS RÁPIDOS */}
       <section className={styles.quickAccess}>
