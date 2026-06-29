@@ -6,9 +6,16 @@
    ==================================================================== */
 
 :root {
+  /* Paleta institucional UTN */
+  --utn-red: #d10a11;
+  --utn-red-hover: #a1080d;
+  --utn-dark: #3a3939;
+  --utn-gray: #706f6f;
+  --utn-light: #f4f6f9;
+
   /* Colores principales UTN (Paleta Exacta) */
-  --color-primary: #B30000;
-  --color-primary-dark: #8c0000;
+  --color-primary: var(--utn-red);
+  --color-primary-dark: var(--utn-red-hover);
   --color-primary-light: #e60000;
   --color-secondary: #212529; /* Usando Negro/Gris Carbón como color secundario principal */
   --color-secondary-dark: #121416;

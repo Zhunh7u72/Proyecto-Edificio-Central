@@ -1,12 +1,12 @@
 .adminWrapper {
   display: flex;
   min-height: 100vh;
-  background: var(--color-bg-alt);
+  background: var(--utn-light);
 }
 
 .sidebar {
   width: 260px;
-  background: var(--color-bg-dark);
+  background: var(--utn-dark);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -29,7 +29,8 @@
 
 .sidebarHeader h3 {
   font-size: 1.1rem;
-  color: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
 }
 
 .sidebarHeader p {
@@ -38,15 +39,16 @@
 }
 
 .nav {
-  padding: 1.5rem 0;
+  padding: 1rem 0;
   flex: 1;
+  overflow-y: auto;
 }
 
 .navLink {
   display: block;
-  padding: 0.8rem 1.5rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.95rem;
+  padding: 0.75rem 1.5rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.9rem;
   transition: all var(--transition-fast);
   border-left: 3px solid transparent;
 }
@@ -54,7 +56,46 @@
 .navLink:hover {
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
-  border-left-color: var(--color-primary);
+  border-left-color: var(--utn-red);
+}
+
+.navLinkActive {
+  background: rgba(209, 10, 17, 0.15);
+  color: #fff;
+  border-left-color: var(--utn-red);
+  font-weight: 600;
+}
+
+.navLinkDisabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  user-select: none;
+}
+
+.disabledPage {
+  opacity: 0.65;
+}
+
+.disabledTitle {
+  opacity: 0.5;
+}
+
+.disabledCard {
+  background: #fff;
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
+  padding: 2.5rem;
+  text-align: center;
+  color: var(--utn-gray);
+  max-width: 520px;
+}
+
+.disabledIcon {
+  display: block;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
 }
 
 .sidebarFooter {
@@ -67,19 +108,19 @@
 
 .logoutBtn {
   width: 100%;
-  background: rgba(209, 10, 17, 0.1);
-  color: #fca5a5;
-  border: 1px solid rgba(209, 10, 17, 0.3);
-  padding: 0.6rem;
+  background: var(--utn-red);
+  color: #fff;
+  border: none;
+  padding: 0.65rem;
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  transition: all var(--transition-fast);
+  font-weight: 600;
+  transition: background var(--transition-fast);
   cursor: pointer;
 }
 
 .logoutBtn:hover {
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--utn-red-hover);
 }
 
 .publicLink {
@@ -104,11 +145,11 @@
   .adminWrapper {
     flex-direction: column;
   }
-  
+
   .sidebar {
     width: 100%;
   }
-  
+
   .mainContent {
     padding: 1rem;
   }

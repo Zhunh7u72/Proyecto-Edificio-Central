@@ -56,11 +56,12 @@
 
 .quickGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
 }
 
 .quickCard {
+  display: block;
   background: var(--color-bg);
   padding: 1.8rem;
   border-radius: var(--radius-lg);

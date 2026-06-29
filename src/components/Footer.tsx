@@ -18,6 +18,8 @@ export default function Footer() {
           <h4 className={styles.colTitle}>Enlaces Rápidos</h4>
           <ul className={styles.links}>
             <li><a href="/">Inicio</a></li>
+            <li><a href="/galeria">Galería</a></li>
+            <li><a href="/documentos">Documentos PDF</a></li>
             <li><a href="/institucional">Institucional</a></li>
             <li><a href="https://www.utn.edu.ec" target="_blank" rel="noopener noreferrer">Portal UTN</a></li>
           </ul>

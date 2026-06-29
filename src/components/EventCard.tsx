@@ -8,6 +8,7 @@ interface EventCardProps {
   tipo: string
   fecha_publicacion: string
   fecha_limite_inscripcion: string | null
+  url_imagen?: string | null
 }
 
 export default function EventCard({
@@ -17,13 +18,16 @@ export default function EventCard({
   tipo,
   fecha_publicacion,
   fecha_limite_inscripcion,
+  url_imagen,
 }: EventCardProps) {
   const badgeClass =
     tipo === 'Evento'
       ? styles.badgeEvento
       : tipo === 'Anuncio'
         ? styles.badgeAnuncio
-        : styles.badgeCapacitacion
+        : tipo === 'Taller'
+          ? styles.badgeTaller
+          : styles.badgeCapacitacion
 
   const fechaPub = new Date(fecha_publicacion).toLocaleDateString('es-EC', {
     day: 'numeric',
@@ -34,9 +38,13 @@ export default function EventCard({
   return (
     <div className={styles.card}>
       <div className={styles.cardImageWrapper}>
-        <div className={styles.cardImagePlaceholder}>
-          <span className={styles.cardImageIcon}>📰</span>
-        </div>
+        {url_imagen ? (
+          <img src={url_imagen} alt={titulo} className={styles.cardImage} />
+        ) : (
+          <div className={styles.cardImagePlaceholder}>
+            <span className={styles.cardImageIcon}>📰</span>
+          </div>
+        )}
         <span className={`${styles.badge} ${badgeClass}`}>{tipo}</span>
       </div>
       <div className={styles.cardBody}>
