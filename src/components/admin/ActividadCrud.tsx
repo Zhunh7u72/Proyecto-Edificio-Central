@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useActionState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   crearActividad,
   actualizarActividad,
@@ -46,6 +47,7 @@ export default function ActividadCrud({
   comentariosPorActividad = {},
   dbError,
 }: ActividadCrudProps) {
+  const router = useRouter()
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<Actividad | null>(null)
   const [comentariosView, setComentariosView] = useState<{
@@ -85,9 +87,21 @@ export default function ActividadCrud({
   }
 
   const handleDelete = async (id: number) => {
-    if (confirm(`¿Eliminar este ${tipo.toLowerCase()}?`)) {
-      await eliminarActividad(id)
+    if (
+      !confirm(
+        `¿Eliminar este ${tipo.toLowerCase()}? También se borrarán inscripciones y comentarios asociados.`
+      )
+    ) {
+      return
     }
+
+    const result = await eliminarActividad(id)
+    if (result.error) {
+      alert(result.error)
+      return
+    }
+
+    router.refresh()
   }
 
   return (

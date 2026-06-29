@@ -3,7 +3,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { getSession } from '@/lib/session'
 import { revalidatePath } from 'next/cache'
-import { syncImagenActividad, eliminarArchivosActividad } from '@/lib/actividad-archivos'
+import { syncImagenActividad, eliminarDependenciasActividad } from '@/lib/actividad-archivos'
 import type { ActionState } from '@/lib/types/admin'
 
 async function requireAdmin() {
@@ -39,6 +39,7 @@ function revalidateActividadPaths() {
   revalidatePath('/admin/talleres')
   revalidatePath('/admin/actividades')
   revalidatePath('/admin/dashboard')
+  revalidatePath('/admin/inscripciones')
   revalidatePath('/')
 }
 
@@ -109,7 +110,7 @@ export async function eliminarActividad(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
 
-    await eliminarArchivosActividad(id)
+    await eliminarDependenciasActividad(id)
 
     const { error } = await supabaseAdmin
       .from('actividades')
@@ -120,7 +121,9 @@ export async function eliminarActividad(id: number): Promise<ActionState> {
 
     revalidateActividadPaths()
     return { success: 'Registro eliminado.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Error desconocido.'
+    if (message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Error al eliminar: ' + message }
   }
 }

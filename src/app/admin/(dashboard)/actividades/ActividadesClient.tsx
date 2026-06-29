@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useActionState } from 'react'
+import { useRouter } from 'next/navigation'
 import { crearActividad, eliminarActividad } from '@/app/actions/actividades'
 
 interface Actividad {
@@ -12,13 +13,26 @@ interface Actividad {
 }
 
 export default function ActividadesClient({ actividades }: { actividades: Actividad[] }) {
+  const router = useRouter()
   const [showModal, setShowModal] = useState(false)
   const [state, action, isPending] = useActionState(crearActividad, undefined)
 
   const handleDelete = async (id: number) => {
-    if (confirm('¿Estás seguro de eliminar esta actividad?')) {
-      await eliminarActividad(id)
+    if (
+      !confirm(
+        '¿Eliminar esta actividad? También se borrarán inscripciones y comentarios asociados.'
+      )
+    ) {
+      return
     }
+
+    const result = await eliminarActividad(id)
+    if (result.error) {
+      alert(result.error)
+      return
+    }
+
+    router.refresh()
   }
 
   return (
