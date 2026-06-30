@@ -4,12 +4,6 @@ import styles from './page.module.css'
 export const dynamic = 'force-dynamic'
 
 export default async function InstitucionalPage() {
-  const { data: info } = await supabase
-    .from('informacion_institucional')
-    .select('*')
-    .limit(1)
-    .single()
-
   const { data: autoridades } = await supabase
     .from('autoridades_info_institucional')
     .select('*')
@@ -23,43 +17,30 @@ export default async function InstitucionalPage() {
       {/* ENCABEZADO */}
       <div className={styles.header}>
         <div className="container">
-          <h1 className={styles.title}>FEUE — Edificio Central UTN</h1>
+          <h1 className={styles.title}>Representantes Estudiantiles</h1>
           <p className={styles.subtitle}>Federación de Estudiantes Universitarios del Ecuador — UTN</p>
         </div>
       </div>
 
       <div className="container" style={{ marginTop: '3rem', marginBottom: '4rem' }}>
 
-        {/* MISIÓN Y VISIÓN */}
-        <div className="grid-2">
-          <div className={styles.card}>
-            <div className="section-title-accent"></div>
-            <h3>Nuestra Misión</h3>
-            <p className={styles.text}>{info?.mision || 'Información no disponible.'}</p>
-          </div>
-          <div className={styles.card}>
-            <div className="section-title-accent"></div>
-            <h3>Nuestra Visión</h3>
-            <p className={styles.text}>{info?.vision || 'Información no disponible.'}</p>
-          </div>
-        </div>
+        {/* ════════════════════════════════
+            GOBIERNO ESTUDIANTIL
+            ════════════════════════════════ */}
+        <div className={styles.representantesSection}>
+          <div className="section-title-accent"></div>
+          <h2 className="section-title">Gobierno Estudiantil</h2>
+          <p className="section-subtitle" style={{ marginBottom: '2rem' }}>
+            Miembros del Gobierno Estudiantil de la Universidad Técnica del Norte
+          </p>
 
-        <div className={styles.sectionDivider}></div>
-
-        {/* REPRESENTANTES ESTUDIANTILES */}
-        {autoridades && autoridades.length > 0 && (
-          <>
-            <div className="section-title-accent"></div>
-            <h2 className="section-title">Representantes Estudiantiles</h2>
-            <p className="section-subtitle" style={{ marginBottom: '2rem' }}>
-              Conoce a quienes forman parte del Gobierno y Cogobierno Estudiantil de la UTN
-            </p>
+          {autoridades && autoridades.length > 0 ? (
             <div className={styles.autoridadesGrid}>
               {autoridades.map((aut) => (
                 <div key={aut.id_autoridades_info_institu} className={styles.autoridadCard}>
                   <div className={styles.autoridadFotoWrapper}>
                     {aut.ruta_foto ? (
-                      <img src={aut.ruta_foto} alt={`${aut.nombres} ${aut.apellidos}`} className={styles.autoridadFoto} />
+                      <img src={aut.ruta_foto} alt={`${aut.nombres} ${aut.apellidos}`} className={styles.autoridadFoto} loading="lazy" />
                     ) : (
                       <div className={styles.autoridadFotoPlaceholder}>
                         <span>👤</span>
@@ -75,11 +56,39 @@ export default async function InstitucionalPage() {
                 </div>
               ))}
             </div>
-            <div className={styles.sectionDivider}></div>
-          </>
-        )}
+          ) : (
+            <div className={styles.emptySection}>
+              <span className={styles.emptyIcon}>🏛️</span>
+              <h3>Sección en construcción</h3>
+              <p>Los representantes del Gobierno Estudiantil serán publicados próximamente por el administrador.</p>
+            </div>
+          )}
+        </div>
 
-        {/* DIRECTORIO DE ASOCIACIONES POR CARRERA */}
+        <div className={styles.sectionDivider}></div>
+
+        {/* ════════════════════════════════
+            COGOBIERNO ESTUDIANTIL
+            ════════════════════════════════ */}
+        <div className={styles.representantesSection}>
+          <div className="section-title-accent"></div>
+          <h2 className="section-title">Cogobierno Estudiantil</h2>
+          <p className="section-subtitle" style={{ marginBottom: '2rem' }}>
+            Miembros del Cogobierno Estudiantil de la Universidad Técnica del Norte
+          </p>
+
+          <div className={styles.emptySection}>
+            <span className={styles.emptyIcon}>🤝</span>
+            <h3>Sección en construcción</h3>
+            <p>Los representantes del Cogobierno Estudiantil serán publicados próximamente por el administrador.</p>
+          </div>
+        </div>
+
+        <div className={styles.sectionDivider}></div>
+
+        {/* ════════════════════════════════
+            DIRECTORIO DE ASOCIACIONES
+            ════════════════════════════════ */}
         <div className="section-title-accent"></div>
         <h2 className="section-title">Directorio de Asociaciones</h2>
         <p className="section-subtitle" style={{ marginBottom: '2rem' }}>
@@ -87,9 +96,11 @@ export default async function InstitucionalPage() {
         </p>
 
         {(!facultades || facultades.length === 0) ? (
-          <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', fontStyle: 'italic' }}>
-            El directorio está siendo actualizado. Vuelve pronto.
-          </p>
+          <div className={styles.emptySection}>
+            <span className={styles.emptyIcon}>📋</span>
+            <h3>Directorio en actualización</h3>
+            <p>El directorio de asociaciones está siendo actualizado. Vuelve pronto.</p>
+          </div>
         ) : (
           facultades.map((fac) => (
             <div key={fac.id_facultad} className={styles.facultadSection}>

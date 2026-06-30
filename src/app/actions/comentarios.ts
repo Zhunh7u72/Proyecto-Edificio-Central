@@ -92,3 +92,21 @@ export async function publicarComentario(
   revalidatePath(`/eventos/${id_actividad}`)
   return { success: 'Comentario publicado correctamente.' }
 }
+
+export async function eliminarComentario(id_comentario: number): Promise<{ error?: string }> {
+  try {
+    const { error } = await supabaseAdmin
+      .from('comentarios')
+      .delete()
+      .eq('id_comentario', id_comentario)
+    
+    if (error) {
+      return { error: 'Error al eliminar el comentario: ' + error.message }
+    }
+    
+    revalidatePath('/admin')
+    return {}
+  } catch (err: any) {
+    return { error: 'Excepción al eliminar: ' + err.message }
+  }
+}

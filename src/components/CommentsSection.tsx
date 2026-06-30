@@ -180,7 +180,7 @@ function CommentItem({ comentario }: { comentario: ComentarioPublico }) {
 function Attachment({
   archivo,
 }: {
-  archivo: { ruta_archivo: string; tipo_archivo: string }
+  archivo: { id_archivo_inter?: number; ruta_archivo: string; tipo_archivo: string }
 }) {
   const nombre = nombreArchivoDesdeRuta(archivo.ruta_archivo)
   const esFoto = archivo.tipo_archivo === TIPO_ARCHIVO_FOTO
@@ -189,7 +189,7 @@ function Attachment({
   if (esFoto) {
     return (
       <a href={archivo.ruta_archivo} target="_blank" rel="noopener noreferrer" className={styles.attachmentImage}>
-        <img src={archivo.ruta_archivo} alt={nombre} />
+        <img src={archivo.ruta_archivo} alt={nombre} loading="lazy" />
         <span>{nombre}</span>
       </a>
     )

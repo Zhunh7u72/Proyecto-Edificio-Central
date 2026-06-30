@@ -1,21 +1,13 @@
 import styles from '@/components/admin/admin.module.css'
 import layoutStyles from '../layout.module.css'
+import { fetchActividadesByTipoWithComentarios } from '@/lib/data'
+import ActividadCrud from '@/components/admin/ActividadCrud'
 
 export const dynamic = 'force-dynamic'
 
-export default function TalleresPage() {
+export default async function TalleresPage() {
+  const { data, error, comentariosPorActividad, inscripcionesPorActividad } = await fetchActividadesByTipoWithComentarios('Taller')
   return (
-    <div className={layoutStyles.disabledPage}>
-      <div className={styles.pageHeader}>
-        <h1 className={`${styles.pageTitle} ${layoutStyles.disabledTitle}`}>Gestión de Talleres</h1>
-        <p className={styles.pageSubtitle}>
-          Módulo temporalmente desactivado. El esquema actual no incluye el tipo &quot;Taller&quot; en
-          actividades.
-        </p>
-      </div>
-
-      <div className={layoutStyles.disabledCard}>
-        <span className={layoutStyles.disabledIcon}>🛠️</span>
         <p>
           Los talleres estarán disponibles cuando se habilite el tipo en la base de datos. Por ahora
           puedes gestionar <strong>Anuncios</strong>, <strong>Eventos</strong> y{' '}

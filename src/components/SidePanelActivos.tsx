@@ -1,7 +1,8 @@
 import Link from 'next/link'
+import { getRutaImagenActividad, ActividadConArchivos } from '@/lib/actividad-archivos'
 import styles from './SidePanelActivos.module.css'
 
-interface Activity {
+interface Activity extends ActividadConArchivos {
   id_actividad: number
   titulo: string
   tipo: string
@@ -10,36 +11,42 @@ interface Activity {
 
 export default function SidePanelActivos({ items }: { items: Activity[] }) {
   return (
-    <div className={styles.panelContainer}>
-      <h3 className={styles.panelTitle}>
-        <span className={styles.pulseIcon}>📅</span> Esta Semana
-      </h3>
-      
+    <div className={styles.panel}>
+      <div className={styles.header}>
+        <h3 className={styles.headerTitle}>
+          <span className={styles.pulseIcon}>🔥</span> Últimos Eventos
+        </h3>
+      </div>
+
       <div className={styles.list}>
         {items.length === 0 ? (
-          <p className={styles.empty}>No hay eventos urgentes activos en este momento.</p>
+          <p className={styles.empty}>No hay eventos recientes en este momento.</p>
         ) : (
-          items.map((item) => (
-            <Link key={item.id_actividad} href={`/eventos/${item.id_actividad}`} className={styles.card}>
-              <div className={styles.cardHeader}>
-                <span className={`badge badge-${item.tipo.toLowerCase()}`} style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>
-                  {item.tipo}
-                </span>
-                {item.fecha_fin && (
-                  <span className={styles.date}>
-                    Cierra: {new Date(item.fecha_fin).toLocaleDateString('es-EC', { day: 'numeric', month: 'short' })}
-                  </span>
-                )}
-              </div>
-              <h4 className={styles.title}>{item.titulo}</h4>
-              <span className={styles.linkText}>Ver detalles →</span>
-            </Link>
-          ))
+          items.slice(0, 4).map((item) => {
+            const imagen = getRutaImagenActividad(item)
+            return (
+              <Link key={item.id_actividad} href={`/eventos/${item.id_actividad}`} className={styles.card}>
+                <div className={styles.cardImageWrapper}>
+                  {imagen ? (
+                    <img src={imagen} alt={item.titulo} className={styles.cardImage} loading="lazy" />
+                  ) : (
+                    <div className={styles.cardImagePlaceholder}>
+                      <span>📰</span>
+                    </div>
+                  )}
+                </div>
+                <div className={styles.cardInfo}>
+                  <span className={styles.tipoBadge}>{item.tipo}</span>
+                  <h4 className={styles.title}>{item.titulo}</h4>
+                </div>
+              </Link>
+            )
+          })
         )}
       </div>
-      
+
       <div className={styles.panelFooter}>
-        <Link href="/#actividades" className={styles.viewAll}>Ver toda la agenda</Link>
+        <Link href="/#actividades" className={styles.viewAll}>Ver toda la agenda →</Link>
       </div>
     </div>
   )

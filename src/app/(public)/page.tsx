@@ -1,38 +1,23 @@
 import Link from 'next/link'
 import { supabaseAdmin as supabase } from '@/lib/supabase'
 import { ACTIVIDADES_SELECT, getRutaImagenActividad } from '@/lib/actividad-archivos'
-import EventCard from '@/components/EventCard'
-import Carousel from '@/components/Carousel'
+import CarteleraSection from '@/components/CarteleraSection'
+import HeroSlider from '@/components/HeroSlider'
 import SidePanelActivos from '@/components/SidePanelActivos'
+import ScrollReveal from '@/components/ScrollReveal'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  // 1. Obtener destacados para el carrusel (los 5 más recientes)
-  const { data: destacados } = await supabase
+  // 1. Últimos 4 eventos para el panel lateral izquierdo
+  const { data: recientes } = await supabase
     .from('actividades')
     .select(ACTIVIDADES_SELECT)
     .order('fecha_publicacion', { ascending: false })
-    .limit(5)
+    .limit(4)
 
-  // 2. Panel lateral: eventos cuya fecha_inicio cae en la semana actual
-  const startOfWeek = new Date()
-  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1) // Lunes
-  startOfWeek.setHours(0, 0, 0, 0)
-  const endOfWeek = new Date(startOfWeek)
-  endOfWeek.setDate(startOfWeek.getDate() + 6) // Domingo
-  endOfWeek.setHours(23, 59, 59, 999)
-
-  const { data: urgentes } = await supabase
-    .from('actividades')
-    .select(ACTIVIDADES_SELECT)
-    .gte('fecha_inicio', startOfWeek.toISOString())
-    .lte('fecha_inicio', endOfWeek.toISOString())
-    .order('fecha_inicio', { ascending: true })
-    .limit(6)
-
-  // 3. Agenda del mes actual — basada en fecha_inicio
+  // 2. Agenda completa del mes actual para la cartelera inferior
   const now = new Date()
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
   const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
@@ -40,93 +25,73 @@ export default async function HomePage() {
   const { data: agendaMes, error: errorAgenda } = await supabase
     .from('actividades')
     .select(ACTIVIDADES_SELECT)
-    .gte('fecha_inicio', firstDayOfMonth)
-    .lte('fecha_inicio', lastDayOfMonth)
-    .order('fecha_inicio', { ascending: true })
+    .gte('fecha_publicacion', firstDayOfMonth)
+    .lte('fecha_publicacion', lastDayOfMonth)
+    .order('fecha_publicacion', { ascending: false })
+    .limit(12)
+
+  // 3. Obtener configuración institucional (carrusel)
+  const { data: config } = await supabase
+    .from('informacion_institucional')
+    .select('carrusel_urls')
+    .limit(1)
+    .single()
 
   return (
     <>
-      {/* SECCIÓN PRINCIPAL: CARRUSEL Y PANEL LATERAL */}
-      <section className={`section ${styles.heroSection}`}>
-        <div className={`container ${styles.heroLayout}`}>
-          <div className={styles.carouselWrapper}>
-            <Carousel items={(destacados || []).map(d => ({...d, url_imagen: getRutaImagenActividad(d)}))} />
-          </div>
+      {/* ═══════════════════════════════════════════════════════════
+          RF01 — HERO SECTION: Panel Lateral + Carrusel Grande
+          ═══════════════════════════════════════════════════════════ */}
+      <section className={styles.heroSection}>
+        <div className={styles.heroLayout}>
+          {/* Izquierda: 4 últimos eventos con imagen y título */}
           <div className={styles.panelWrapper}>
-            <SidePanelActivos items={urgentes || []} />
+            <SidePanelActivos items={recientes || []} />
+          </div>
+          {/* Derecha: Carrusel rotativo grande */}
+          <div className={styles.carouselWrapper}>
+            <HeroSlider carruselUrls={config?.carrusel_urls} />
           </div>
         </div>
       </section>
 
-      {/* ACCESOS RÁPIDOS */}
-      <section className={styles.quickAccess}>
-        <div className="container">
-          <div className={styles.quickGrid}>
-            <Link href="/institucional" className={styles.quickCard}>
-              <span className={styles.quickIcon}>🏛️</span>
-              <h3>Institucional</h3>
-              <p>Misión, visión y directorio de la FEUE y Asos</p>
-            </Link>
-            <Link href="/galerias" className={styles.quickCard}>
-              <span className={styles.quickIcon}>📷</span>
-              <h3>Galería</h3>
-              <p>Fotografías de actividades y eventos</p>
-            </Link>
-            <Link href="/documentos" className={styles.quickCard}>
-              <span className={styles.quickIcon}>📄</span>
-              <h3>Documentos</h3>
-              <p>Descarga documentos oficiales y resoluciones</p>
-            </Link>
-            <Link href="/historial" className={styles.quickCard}>
-              <span className={styles.quickIcon}>🕰️</span>
-              <h3>Historial</h3>
-              <p>Baúl de los recuerdos de eventos pasados</p>
-            </Link>
+
+
+      {/* ═══════════════════════════════════════════════════════════
+          RF01 (Parte 2) — CARTELERA: Agenda del mes en tarjetas
+          ═══════════════════════════════════════════════════════════ */}
+      {!errorAgenda && agendaMes && agendaMes.length > 0 ? (
+        <CarteleraSection
+          actividades={agendaMes.map((act) => ({
+            id_actividad: act.id_actividad,
+            titulo: act.titulo,
+            descripcion: act.descripcion,
+            tipo: act.tipo,
+            fecha_publicacion: act.fecha_publicacion,
+            fecha_limite_inscripcion: act.fecha_limite_inscripcion,
+            url_imagen: getRutaImagenActividad(act),
+          }))}
+        />
+      ) : !errorAgenda ? (
+        <section id="actividades" className={styles.cartelera}>
+          <div className={styles.carteleraContainer}>
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>📭</span>
+              <h3>No hay actividades publicadas este mes</h3>
+              <p>Cuando el administrador FEUE publique eventos o anuncios, aparecerán aquí.</p>
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* AGENDA DEL MES */}
-      <section id="actividades" className={`section ${styles.actividades}`}>
-        <div className="container">
-          <div className="section-title-accent"></div>
-          <h2 className="section-title">Agenda del Mes</h2>
-          <p className="section-subtitle">
-            Catálogo completo de eventos y actividades programadas para este mes
-          </p>
-
-          {errorAgenda && (
+        </section>
+      ) : (
+        <section id="actividades" className={styles.cartelera}>
+          <div className={styles.carteleraContainer}>
             <div className={styles.errorMsg}>
               <p>⚠️ Error al conectar con la base de datos.</p>
               <code>{errorAgenda.message}</code>
             </div>
-          )}
-
-          {!errorAgenda && agendaMes && agendaMes.length > 0 ? (
-            <div className="grid-3">
-              {agendaMes.map((act) => (
-                <EventCard
-                  key={act.id_actividad}
-                  id={act.id_actividad}
-                  titulo={act.titulo}
-                  descripcion={act.descripcion}
-                  tipo={act.tipo}
-                  fecha_publicacion={act.fecha_publicacion}
-                  fecha_inicio={act.fecha_inicio}
-                  fecha_fin={act.fecha_fin}
-                  url_imagen={getRutaImagenActividad(act)}
-                />
-              ))}
-            </div>
-          ) : !errorAgenda ? (
-            <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>📅</span>
-              <h3>Mes sin actividades</h3>
-              <p>No se han publicado eventos para este mes todavía.</p>
-            </div>
-          ) : null}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
     </>
   )
 }

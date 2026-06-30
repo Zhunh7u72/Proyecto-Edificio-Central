@@ -18,10 +18,14 @@ export async function fetchActividadesByTipo(tipo: string) {
   }
 }
 
+import { fetchInscripcionesMap } from '@/lib/inscripciones-query'
+
 export async function fetchActividadesByTipoWithComentarios(tipo: string) {
   const { data, error } = await fetchActividadesByTipo(tipo)
-  const comentariosPorActividad = await fetchComentariosMap(data.map((a) => a.id_actividad))
-  return { data, error, comentariosPorActividad }
+  const idActividades = data.map((a) => a.id_actividad)
+  const comentariosPorActividad = await fetchComentariosMap(idActividades)
+  const inscripcionesPorActividad = await fetchInscripcionesMap(idActividades)
+  return { data, error, comentariosPorActividad, inscripcionesPorActividad }
 }
 
 export type ActividadesConComentarios = {

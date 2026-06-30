@@ -47,6 +47,36 @@
   margin: 4rem 0;
 }
 
+.representantesSection {
+  margin-bottom: 1rem;
+}
+
+.emptySection {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--color-bg-alt);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.emptySection h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.emptySection p {
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
 .facultadesGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

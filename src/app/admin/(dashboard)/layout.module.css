@@ -59,6 +59,13 @@
   border-left-color: var(--utn-red);
 }
 
+.navSubLink {
+  padding-left: 2.75rem;
+  font-size: 0.85rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-left: 3px solid transparent;
+}
+
 .navLinkActive {
   background: rgba(209, 10, 17, 0.15);
   color: #fff;

@@ -1,7 +1,8 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase'
-import { ACTIVIDADES_SELECT, getRutaImagenActividad } from '@/lib/actividad-archivos'
+import { ACTIVIDADES_SELECT, getRutasImagenesActividad } from '@/lib/actividad-archivos'
 import { fetchComentariosActividad } from '@/lib/comentarios-query'
 import CommentsSection from '@/components/CommentsSection'
+import ActivityImageCarousel from '@/components/ActivityImageCarousel'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import EnrollForm from '@/components/EnrollForm'
@@ -38,7 +39,7 @@ export default async function EventPage({ params }: EventPageProps) {
   })
   
   const esInscripcionAbierta = actividad.fecha_fin && new Date() <= new Date(actividad.fecha_fin)
-  const urlImagen = getRutaImagenActividad(actividad)
+  const imagenes = getRutasImagenesActividad(actividad)
 
   const { comentarios } = await fetchComentariosActividad(actividad.id_actividad)
     return (
@@ -59,10 +60,8 @@ export default async function EventPage({ params }: EventPageProps) {
       <div className={`container ${styles.contentGrid}`}>
         {/* COLUMNA PRINCIPAL */}
         <div className={styles.mainCol}>
-          {urlImagen && (
-            <div className={styles.heroImage}>
-              <img src={urlImagen} alt={actividad.titulo} />
-            </div>
+          {imagenes && imagenes.length > 0 && (
+            <ActivityImageCarousel images={imagenes} title={actividad.titulo} />
           )}
           <div className={styles.contentBox}>
             <h3 className={styles.sectionTitle}>Detalles de la Actividad</h3>

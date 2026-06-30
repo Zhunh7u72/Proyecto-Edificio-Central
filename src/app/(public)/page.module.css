@@ -2,34 +2,51 @@
    HOME PAGE STYLES
    ==================================================================== */
 
-/* HERO SECTION (Carrusel + Panel) */
+/* ═══════════════════════════════════════
+   RF01 — HERO SECTION (Panel + Carrusel)
+   ═══════════════════════════════════════ */
 .heroSection {
-  padding: 2rem 0;
   background: var(--color-bg-alt);
+  padding: 2.5rem 0;
+  position: relative;
 }
 
 .heroLayout {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
-  align-items: stretch;
-}
-
-.carouselWrapper {
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: 340px 1fr;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: min(75vh, 600px);
+  min-height: 480px;
 }
 
 .panelWrapper {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  z-index: 5;
+  position: relative;
 }
 
-/* QUICK ACCESS */
+.carouselWrapper {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* ═══════════════════════════════════════
+   QUICK ACCESS
+   ═══════════════════════════════════════ */
 .quickAccess {
   padding: 2.5rem 0;
   background: var(--color-bg);
-  margin-top: -3rem;
+  margin-top: -2rem;
   position: relative;
   z-index: 10;
 }
@@ -57,10 +74,22 @@
   border-color: var(--color-primary);
 }
 
-.quickIcon {
-  font-size: 2.5rem;
-  display: block;
-  margin-bottom: 0.8rem;
+.quickIconCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--utn-red), var(--utn-red-hover));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: #fff;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.quickCard:hover .quickIconCircle {
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(210, 10, 17, 0.3);
 }
 
 .quickCard h3 {
@@ -76,9 +105,52 @@
   line-height: 1.5;
 }
 
-/* ACTIVIDADES */
-.actividades {
-  background: var(--color-bg-alt);
+/* ═══════════════════════════════════════
+   CARTELERA — Agenda del mes
+   ═══════════════════════════════════════ */
+.cartelera {
+  padding: 3.75rem 0 4.25rem;
+  background: #fff;
+}
+
+.carteleraContainer {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.carteleraHeader {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.carteleraTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--utn-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.9rem;
+}
+
+.carteleraLine {
+  width: 100px;
+  height: 4px;
+  background: var(--utn-red);
+  margin: 0 auto;
+  border-radius: 2px;
+}
+
+.carteleraGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.25rem;
+  align-items: stretch;
+}
+
+.carteleraGrid > * {
+  height: 100%;
 }
 
 /* ERROR Y EMPTY STATE */
@@ -124,17 +196,51 @@
   font-size: 0.92rem;
 }
 
-/* RESPONSIVE */
+/* ═══════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════ */
 @media (max-width: 1024px) {
   .heroLayout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 260px 1fr;
+    height: min(70vh, 560px);
+    min-height: 380px;
+  }
+  .carteleraGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .carteleraTitle {
+    font-size: 2rem;
   }
   .quickGrid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
+@media (max-width: 768px) {
+  .heroLayout {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: auto;
+  }
+  .panelWrapper {
+    order: 2;
+    height: auto;
+  }
+  .carouselWrapper {
+    order: 1;
+    height: min(55vh, 380px);
+    min-height: 280px;
+  }
+}
+
 @media (max-width: 640px) {
+  .carteleraGrid {
+    grid-template-columns: 1fr;
+  }
+  .carteleraTitle {
+    font-size: 1.6rem;
+  }
   .quickGrid {
     grid-template-columns: 1fr;
   }

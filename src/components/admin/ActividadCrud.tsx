@@ -217,15 +217,15 @@ export default function ActividadCrud({
                 </div>
 
                 <div className={`form-group ${styles.formGridFull}`}>
-                  <label className="form-label">Link de imagen</label>
+                  <label className="form-label">Imágenes</label>
                   <input
-                    type="url"
-                    name="ruta_imagen"
+                    type="file"
+                    name="archivos"
                     className="form-input"
-                    placeholder="https://..."
-                    defaultValue={editing?.url_imagen ?? ''}
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    multiple
                   />
-                  <small className={styles.fileHint}>Pega la URL pública de la imagen</small>
+                  <small className={styles.fileHint}>Puedes subir varias fotos (max 5MB c/u)</small>
                 </div>
 
                 <div className="form-group">

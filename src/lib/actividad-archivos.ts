@@ -19,6 +19,13 @@ export function getRutaImagenActividad(actividad: ActividadConArchivos): string 
   return foto?.ruta_archivo ?? null
 }
 
+export function getRutasImagenesActividad(actividad: ActividadConArchivos): string[] {
+  const archivos = actividad.archivos_actividades ?? []
+  return archivos
+    .filter((a) => a.tipo_archivo === TIPO_ARCHIVO_FOTO)
+    .map((a) => a.ruta_archivo)
+}
+
 export function mapActividadConImagen<T extends ActividadConArchivos>(actividad: T) {
   const { archivos_actividades, ...rest } = actividad
   return {
@@ -27,27 +34,68 @@ export function mapActividadConImagen<T extends ActividadConArchivos>(actividad:
   }
 }
 
+const MAX_FILE_BYTES = 5 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+
+export async function guardarArchivoActividad(file: File, id_actividad: number): Promise<{ ruta: string; tipo: string } | { error: string }> {
+  if (file.size > MAX_FILE_BYTES) {
+    return { error: 'Las imágenes no pueden superar 5 MB.' }
+  }
+  
+  if (!file.type.startsWith('image/') && !ALLOWED_IMAGE_TYPES.has(file.type) && !/\.(jpe?g|png|gif|webp)$/i.test(file.name)) {
+    return { error: 'Solo se permiten imágenes (JPG, PNG, GIF, WEBP).' }
+  }
+
+  const extension = file.name.split('.').pop()
+  const safeName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
+  const storagePath = `actividades/${id_actividad}/${safeName}`
+
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from('archivos_publicos')
+    .upload(storagePath, file, { contentType: file.type })
+
+  if (uploadError) {
+    return { error: 'Error al subir la imagen: ' + uploadError.message }
+  }
+
+  const { data } = supabaseAdmin.storage.from('archivos_publicos').getPublicUrl(storagePath)
+
+  return {
+    ruta: data.publicUrl,
+    tipo: TIPO_ARCHIVO_FOTO,
+  }
+}
+
 export async function syncImagenActividad(
   id_actividad: number,
   formData: FormData
 ): Promise<{ error?: string }> {
-  const ruta = (formData.get('ruta_imagen') as string)?.trim() || null
+  const archivos = formData.getAll('archivos') as File[]
+  const archivosValidos = archivos.filter(f => f.size > 0 && f.name)
 
-  await supabaseAdmin
+  if (archivosValidos.length === 0) return {}
+
+  const { error: deleteError } = await supabaseAdmin
     .from('archivos_actividades')
     .delete()
     .eq('id_actividad', id_actividad)
     .eq('tipo_archivo', TIPO_ARCHIVO_FOTO)
 
-  if (!ruta) return {}
+  if (deleteError) return { error: 'Error al limpiar imágenes anteriores: ' + deleteError.message }
 
-  const { error } = await supabaseAdmin.from('archivos_actividades').insert({
-    id_actividad,
-    ruta_archivo: ruta,
-    tipo_archivo: TIPO_ARCHIVO_FOTO,
-  })
+  for (const archivo of archivosValidos) {
+    const saved = await guardarArchivoActividad(archivo, id_actividad)
+    if ('error' in saved) return { error: saved.error }
 
-  if (error) return { error: 'Error al guardar imagen: ' + error.message }
+    const { error: insertError } = await supabaseAdmin.from('archivos_actividades').insert({
+      id_actividad,
+      ruta_archivo: saved.ruta,
+      tipo_archivo: saved.tipo,
+    })
+
+    if (insertError) return { error: 'Error al guardar referencia de imagen: ' + insertError.message }
+  }
+
   return {}
 }
 

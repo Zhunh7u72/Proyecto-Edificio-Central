@@ -1,6 +1,5 @@
 import 'server-only'
-import { mkdir, writeFile } from 'fs/promises'
-import path from 'path'
+import { supabaseAdmin } from '@/lib/supabase'
 import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -27,17 +26,22 @@ export async function guardarArchivoComentario(
     return { error: 'Solo se permiten imágenes (JPG, PNG, GIF, WEBP) o PDF.' }
   }
 
-  const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
-  const relDir = path.join('uploads', 'comentarios', String(id_actividad))
-  const absDir = path.join(process.cwd(), 'public', relDir)
+  const extension = file.name.split('.').pop()
+  const safeName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
+  const storagePath = `comentarios/${id_actividad}/${safeName}`
 
-  await mkdir(absDir, { recursive: true })
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from('archivos_publicos')
+    .upload(storagePath, file, { contentType: file.type })
 
-  const bytes = await file.arrayBuffer()
-  await writeFile(path.join(absDir, safeName), Buffer.from(bytes))
+  if (uploadError) {
+    return { error: 'Error al subir el archivo: ' + uploadError.message }
+  }
+
+  const { data } = supabaseAdmin.storage.from('archivos_publicos').getPublicUrl(storagePath)
 
   return {
-    ruta: `/${relDir.replace(/\\/g, '/')}/${safeName}`,
+    ruta: data.publicUrl,
     tipo,
   }
 }
