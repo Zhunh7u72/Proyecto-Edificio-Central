@@ -12,11 +12,29 @@ export default function InscripcionesClient({
   dbError?: string | null
 }) {
   const [filtroTipo, setFiltroTipo] = useState('')
+  const [descargando, setDescargando] = useState<string | null>(null)
 
   const filtradas = useMemo(() => {
     if (!filtroTipo) return inscripciones
     return inscripciones.filter((i) => i.actividades?.tipo === filtroTipo)
   }, [inscripciones, filtroTipo])
+
+  const handleDescargarPdf = async (ruta: string) => {
+    setDescargando(ruta)
+    try {
+      const url = `/api/admin/descarga-pdf?ruta=${encodeURIComponent(ruta)}`
+      const a = document.createElement('a')
+      a.href = url
+      a.download = ruta.split('/').pop() ?? 'documento.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } finally {
+      setDescargando(null)
+    }
+  }
+
+  const totalConPdf = inscripciones.filter((i) => i.pdf_ruta).length
 
   return (
     <>
@@ -28,6 +46,18 @@ export default function InscripcionesClient({
       </div>
 
       {dbError && <div className={styles.errorBanner}>{dbError}</div>}
+
+      {/* Stats rápidas */}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Total Inscripciones</div>
+          <div className={styles.statValue}>{inscripciones.length}</div>
+        </div>
+        <div className={`${styles.statCard} ${styles.statCardAlt}`}>
+          <div className={styles.statLabel}>Con Documento PDF</div>
+          <div className={styles.statValue}>{totalConPdf}</div>
+        </div>
+      </div>
 
       <div className={styles.toolbar}>
         <label className={styles.filterLabel}>
@@ -56,12 +86,13 @@ export default function InscripcionesClient({
               <th>Actividad</th>
               <th>Tipo</th>
               <th>Fecha inscripción</th>
+              <th style={{ textAlign: 'center' }}>Documento</th>
             </tr>
           </thead>
           <tbody>
             {filtradas.length === 0 ? (
               <tr>
-                <td colSpan={5} className={styles.emptyRow}>
+                <td colSpan={6} className={styles.emptyRow}>
                   No hay inscripciones registradas.
                 </td>
               </tr>
@@ -94,6 +125,32 @@ export default function InscripcionesClient({
                           minute: '2-digit',
                         })
                       : '—'}
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    {ins.pdf_ruta ? (
+                      <button
+                        className={styles.btnView}
+                        onClick={() => handleDescargarPdf(ins.pdf_ruta!)}
+                        disabled={descargando === ins.pdf_ruta}
+                        title="Descargar documento PDF del estudiante"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          padding: '0.3rem 0.75rem',
+                          border: '1.5px solid var(--utn-red)',
+                          borderRadius: '6px',
+                          fontSize: '0.8rem',
+                        }}
+                      >
+                        {descargando === ins.pdf_ruta ? '⏳' : '⬇️'}{' '}
+                        {descargando === ins.pdf_ruta ? 'Descargando...' : 'PDF'}
+                      </button>
+                    ) : (
+                      <span style={{ color: 'var(--utn-gray)', fontSize: '0.82rem' }}>
+                        Sin documento
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))

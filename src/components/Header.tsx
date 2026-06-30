@@ -62,6 +62,12 @@ export default function Header() {
             <li>
               <Link href="/documentos" onClick={closeMenu}>Documentos</Link>
             </li>
+            <li>
+              <Link href="/institucional" onClick={closeMenu}>Institucional</Link>
+            </li>
+            <li>
+              <Link href="/historial" onClick={closeMenu}>Historial</Link>
+            </li>
 
             <li
               className={`${styles.dropdown} ${feueOpen ? styles.dropdownOpen : ''}`}

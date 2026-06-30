@@ -7,11 +7,12 @@ import styles from '../../app/admin/(dashboard)/layout.module.css'
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
+  { href: '/admin/actividades', label: 'Actividades', icon: '📝' },
   { href: '/admin/anuncios', label: 'Anuncios', icon: '📢' },
   { href: '/admin/eventos', label: 'Eventos', icon: '📅' },
   { href: '/admin/capacitaciones', label: 'Capacitaciones', icon: '🎓' },
   { href: '/admin/inscripciones', label: 'Inscripciones', icon: '📋' },
-  { href: '/admin/talleres', label: 'Talleres', icon: '🛠️', disabled: true },
+  { href: '/admin/institucional', label: 'Representantes', icon: '🏛️' },
   { href: '/admin/asociaciones', label: 'Asociaciones', icon: '🤝', disabled: true },
   { href: '/admin/galerias', label: 'Galerías', icon: '🖼️' },
   { href: '/admin/documentos', label: 'Documentos PDF', icon: '📄' },

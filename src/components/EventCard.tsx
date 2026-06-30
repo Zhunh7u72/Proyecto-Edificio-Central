@@ -7,7 +7,8 @@ interface EventCardProps {
   descripcion: string | null
   tipo: string
   fecha_publicacion: string
-  fecha_limite_inscripcion: string | null
+  fecha_inicio?: string | null
+  fecha_fin?: string | null
   url_imagen?: string | null
 }
 
@@ -17,7 +18,8 @@ export default function EventCard({
   descripcion,
   tipo,
   fecha_publicacion,
-  fecha_limite_inscripcion,
+  fecha_inicio,
+  fecha_fin,
   url_imagen,
 }: EventCardProps) {
   const badgeClass =
@@ -29,7 +31,7 @@ export default function EventCard({
           ? styles.badgeTaller
           : styles.badgeCapacitacion
 
-  const fechaPub = new Date(fecha_publicacion).toLocaleDateString('es-EC', {
+  const fechaPub = new Date(fecha_inicio ?? fecha_publicacion).toLocaleDateString('es-EC', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -58,9 +60,9 @@ export default function EventCard({
             : 'Sin descripción disponible.'}
         </p>
         <div className={styles.cardFooter}>
-          {fecha_limite_inscripcion && (
+          {fecha_fin && (
             <span className={styles.deadline}>
-              ⏰ Inscripción hasta: {new Date(fecha_limite_inscripcion).toLocaleDateString('es-EC')}
+              ⏰ Cierre: {new Date(fecha_fin).toLocaleDateString('es-EC')}
             </span>
           )}
           <Link href={`/eventos/${id}`} className={styles.readMore}>

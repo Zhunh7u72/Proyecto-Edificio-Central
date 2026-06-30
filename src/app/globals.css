@@ -6,11 +6,11 @@
    ==================================================================== */
 
 :root {
-  /* Paleta institucional UTN */
-  --utn-red: #d10a11;
-  --utn-red-hover: #a1080d;
+  /* Paleta institucional UTN — Pantone oficial */
+  --utn-red: #d20a11;        /* Pantone Rojo principal RGB: 209,10,17 */
+  --utn-red-hover: #a1080d;  /* Rojo oscuro para hover */
   --utn-dark: #3a3939;
-  --utn-gray: #706f6f;
+  --utn-gray: #706f6f;       /* Pantone Gris RGB: 112,111,111 */
   --utn-light: #f4f6f9;
 
   /* Colores principales UTN (Paleta Exacta) */
@@ -235,8 +235,8 @@ button {
 
 .form-input:focus {
   outline: none;
-  border-color: var(--color-secondary);
-  box-shadow: 0 0 0 3px rgba(9, 83, 151, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(210, 10, 17, 0.15);
 }
 
 .form-input::placeholder {
@@ -378,8 +378,8 @@ button {
 }
 
 .badge-evento {
-  background: rgba(9, 83, 151, 0.1);
-  color: var(--color-secondary);
+  background: rgba(112, 111, 111, 0.12);
+  color: var(--utn-gray);
 }
 
 .badge-anuncio {

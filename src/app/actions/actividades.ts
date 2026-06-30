@@ -24,10 +24,9 @@ function buildActividadPayload(formData: FormData, tipo: string) {
     titulo,
     descripcion,
     tipo,
-    fecha_limite_inscripcion: fecha_fin || null,
+    fecha_inicio: fecha_inicio || null,
+    fecha_fin: fecha_fin || null,
   }
-
-  if (fecha_inicio) payload.fecha_publicacion = fecha_inicio
 
   return { error: null, payload }
 }

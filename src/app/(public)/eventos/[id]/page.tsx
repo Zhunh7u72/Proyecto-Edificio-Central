@@ -37,7 +37,7 @@ export default async function EventPage({ params }: EventPageProps) {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   })
   
-  const esInscripcionAbierta = actividad.fecha_limite_inscripcion && new Date() <= new Date(actividad.fecha_limite_inscripcion)
+  const esInscripcionAbierta = actividad.fecha_fin && new Date() <= new Date(actividad.fecha_fin)
   const urlImagen = getRutaImagenActividad(actividad)
 
   const { comentarios } = await fetchComentariosActividad(actividad.id_actividad)
@@ -91,11 +91,11 @@ export default async function EventPage({ params }: EventPageProps) {
               <li>
                 <strong>Total Inscritos:</strong> {inscritosCount || 0}
               </li>
-              {actividad.fecha_limite_inscripcion ? (
+              {actividad.fecha_fin ? (
                 <li>
-                  <strong>Cierre de inscripción:</strong><br />
+                  <strong>Cierre de evento e inscripción:</strong><br />
                   <span className={esInscripcionAbierta ? styles.openText : styles.closedText}>
-                    {new Date(actividad.fecha_limite_inscripcion).toLocaleDateString('es-EC', {
+                    {new Date(actividad.fecha_fin).toLocaleDateString('es-EC', {
                       day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute:'2-digit'
                     })}
                   </span>
@@ -111,7 +111,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Formulario de inscripción */}
           <div className={styles.formWrapper}>
-            {esInscripcionAbierta || !actividad.fecha_limite_inscripcion ? (
+            {esInscripcionAbierta || !actividad.fecha_fin ? (
               <EnrollForm idActividad={actividad.id_actividad} />
             ) : (
               <div className={styles.closedMessage}>

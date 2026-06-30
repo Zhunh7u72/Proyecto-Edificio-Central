@@ -1,0 +1,32 @@
+.pageWrapper {
+  background: var(--color-bg);
+  min-height: calc(100vh - 300px);
+}
+
+.header {
+  background: linear-gradient(135deg, #a10810 0%, #d20a11 100%);
+  color: #fff;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding: 3rem 0;
+  }
+  .title {
+    font-size: 2rem;
+  }
+}
