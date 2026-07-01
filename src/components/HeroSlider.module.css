@@ -35,12 +35,17 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.1) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.35) 50%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-  padding: 3rem 4rem;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem 3rem;
+  padding-bottom: 5rem; /* espacio para las miniaturas */
 }
 
 .heroContent {
@@ -55,18 +60,18 @@
 }
 
 .heroTitle {
-  font-size: clamp(2rem, 3.5vw, 3.5rem);
+  font-size: clamp(1.8rem, 3vw, 3rem);
   font-weight: 800;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   line-height: 1.1;
   letter-spacing: -0.02em;
   text-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .heroSubtitle {
-  font-size: clamp(1rem, 1.5vw, 1.1rem);
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
   color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   line-height: 1.5;
   font-weight: 500;
   text-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -79,33 +84,42 @@
   flex-wrap: wrap;
 }
 
+/* ═══════════════════════════════════════
+   THUMBNAILS - Barra inferior compacta
+   ═══════════════════════════════════════ */
 .thumbnailsContainer {
   position: absolute;
-  bottom: 2rem;
-  right: 2rem;
-  left: auto;
-  transform: none;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 2rem);
   display: flex;
-  gap: 0.5rem;
+  gap: 6px;
   z-index: 2;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 30px;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.thumbnailsContainer::-webkit-scrollbar {
+  display: none; /* Chrome */
 }
 
 .thumbnail {
-  width: 80px;
-  height: 50px;
+  width: 40px;
+  height: 28px;
   flex-shrink: 0;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0.6;
+  transition: all 0.25s ease;
+  opacity: 0.5;
   position: relative;
+  border: 2px solid transparent;
 }
 
 .thumbnail img {
@@ -115,28 +129,59 @@
   display: block;
 }
 
-.thumbnail:hover,
+.thumbnail:hover {
+  opacity: 0.85;
+}
+
 .thumbnail.activeThumbnail {
   opacity: 1;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border-color: #fff;
+  box-shadow: 0 0 8px rgba(255,255,255,0.4);
 }
-.thumbnail.activeThumbnail::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 2px solid #fff;
-  border-radius: 6px;
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .heroOverlay {
+    padding: 2rem 1.5rem;
+    padding-bottom: 4.5rem;
+  }
+  .heroTitle {
+    font-size: 1.8rem;
+  }
+  .heroSubtitle {
+    font-size: 0.95rem;
+    margin-bottom: 1.25rem;
+  }
 }
 
 @media (max-width: 640px) {
   .hero {
-    height: min(75vh, 560px);
     min-height: 360px;
   }
 
+  .heroOverlay {
+    padding: 1.5rem 1rem;
+    padding-bottom: 4rem;
+  }
+
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+
   .thumbnail {
-    width: 72px;
-    height: 48px;
+    width: 32px;
+    height: 22px;
+  }
+
+  .heroActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .heroActions a {
+    width: 100%;
+    text-align: center;
   }
 }

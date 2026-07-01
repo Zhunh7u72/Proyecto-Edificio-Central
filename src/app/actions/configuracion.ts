@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 
 async function requireAdmin() {
   const session = await getSession()
-  if (!session || session.role !== 'Admin') throw new Error('No autorizado.')
+  if (!session) throw new Error('No autorizado.')
   return session
 }
 
@@ -23,11 +23,9 @@ export async function actualizarConfiguracionSitio(formData: FormData): Promise<
       .from('informacion_institucional')
       .select('*')
       .limit(1)
-      .single()
+      .maybeSingle()
       
-    if (!config) return { error: 'No se encontró la configuración institucional en la BD.' }
-    
-    let newLogoUrl = config.logo_url
+    let newLogoUrl = config?.logo_url || null
     
     // Upload Logo
     if (logoFile && logoFile.size > 0) {
@@ -63,13 +61,28 @@ export async function actualizarConfiguracionSitio(formData: FormData): Promise<
     }
     
     // Update DB
-    const { error: updateError } = await supabaseAdmin
-      .from('informacion_institucional')
-      .update({
-        logo_url: newLogoUrl,
-        carrusel_urls: newCarruselUrls
-      })
-      .eq('id_info_inst', config.id_info_inst)
+    let updateError = null
+    
+    if (config) {
+      const { error } = await supabaseAdmin
+        .from('informacion_institucional')
+        .update({
+          logo_url: newLogoUrl,
+          carrusel_urls: newCarruselUrls
+        })
+        .eq('id_info_inst', config.id_info_inst)
+      updateError = error
+    } else {
+      const { error } = await supabaseAdmin
+        .from('informacion_institucional')
+        .insert({
+          logo_url: newLogoUrl,
+          carrusel_urls: newCarruselUrls,
+          mision: '',
+          vision: ''
+        })
+      updateError = error
+    }
       
     if (updateError) {
       return { error: 'Error al actualizar configuración: ' + updateError.message }

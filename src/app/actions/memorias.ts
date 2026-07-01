@@ -15,7 +15,6 @@ export async function guardarMemoriaActividad(
 ): Promise<MemoriaState> {
   const id_actividad = parseInt(formData.get('id_actividad') as string)
   const resumen = (formData.get('resumen') as string)?.trim()
-  const fotosStr = (formData.get('fotos_urls') as string)?.trim()
 
   if (!id_actividad) return { error: 'Actividad inválida.' }
 
@@ -28,12 +27,26 @@ export async function guardarMemoriaActividad(
     if (descErr) return { error: 'Error al guardar el resumen: ' + descErr.message }
   }
 
-  // Parsear y guardar las URLs de las fotos
-  if (fotosStr) {
-    const urls = fotosStr
-      .split('\n')
-      .map((u) => u.trim())
-      .filter((u) => u.length > 0)
+  // Procesar archivos subidos
+  const fotosFiles = formData.getAll('fotos_archivos') as File[]
+  const validFiles = fotosFiles.filter(f => f.size > 0)
+  
+  if (validFiles.length > 0) {
+    const urls: string[] = []
+    
+    for (const file of validFiles) {
+      const extension = file.name.split('.').pop()
+      const safeName = `memoria-${id_actividad}-${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
+      
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('archivos_publicos')
+        .upload(`actividades/${id_actividad}/${safeName}`, file, { contentType: file.type })
+        
+      if (!uploadError) {
+        const { data } = supabaseAdmin.storage.from('archivos_publicos').getPublicUrl(`actividades/${id_actividad}/${safeName}`)
+        urls.push(data.publicUrl)
+      }
+    }
 
     if (urls.length > 0) {
       const inserts = urls.map((url) => ({
@@ -46,7 +59,7 @@ export async function guardarMemoriaActividad(
         .from('archivos_actividades')
         .insert(inserts)
 
-      if (fotosErr) return { error: 'Error al guardar las fotos: ' + fotosErr.message }
+      if (fotosErr) return { error: 'Error al guardar las referencias de fotos: ' + fotosErr.message }
     }
   }
 

@@ -14,19 +14,15 @@ export default async function HomePage() {
   const { data: recientes } = await supabase
     .from('actividades')
     .select(ACTIVIDADES_SELECT)
+    .eq('visible', true)
     .order('fecha_publicacion', { ascending: false })
     .limit(4)
 
-  // 2. Agenda completa del mes actual para la cartelera inferior
-  const now = new Date()
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
-
+  // 2. Agenda completa para la cartelera inferior (últimas 12)
   const { data: agendaMes, error: errorAgenda } = await supabase
     .from('actividades')
     .select(ACTIVIDADES_SELECT)
-    .gte('fecha_publicacion', firstDayOfMonth)
-    .lte('fecha_publicacion', lastDayOfMonth)
+    .eq('visible', true)
     .order('fecha_publicacion', { ascending: false })
     .limit(12)
 
@@ -76,8 +72,13 @@ export default async function HomePage() {
         <section id="actividades" className={styles.cartelera}>
           <div className={styles.carteleraContainer}>
             <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>📭</span>
-              <h3>No hay actividades publicadas este mes</h3>
+              <span className={styles.emptyIcon}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"/>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </span>
+              <h3>No hay actividades publicadas</h3>
               <p>Cuando el administrador FEUE publique eventos o anuncios, aparecerán aquí.</p>
             </div>
           </div>

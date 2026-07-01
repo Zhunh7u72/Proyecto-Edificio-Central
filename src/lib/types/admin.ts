@@ -7,6 +7,7 @@ export interface Actividad {
   fecha_publicacion: string
   fecha_limite_inscripcion: string | null
   url_imagen?: string | null
+  visible?: boolean
   /** Alias de formulario / UI */
   fecha_inicio?: string | null
   fecha_fin?: string | null

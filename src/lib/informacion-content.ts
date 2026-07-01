@@ -1,10 +1,7 @@
 export const INFORMACION_SECTIONS = [
   { slug: 'principios', label: 'Principios' },
   { slug: 'objetivos', label: 'Objetivos' },
-  { slug: 'mision', label: 'Misión' },
-  { slug: 'vision', label: 'Visión' },
   { slug: 'fines', label: 'Fines' },
-  { slug: 'autoridades', label: 'Autoridades' },
 ] as const
 
 export type InformacionSlug = (typeof INFORMACION_SECTIONS)[number]['slug']

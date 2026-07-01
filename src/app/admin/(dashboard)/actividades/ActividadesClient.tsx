@@ -1,47 +1,27 @@
 'use client'
 
 import { useState, useActionState } from 'react'
-import { crearActividad, eliminarActividad } from '@/app/actions/actividades'
-import { guardarMemoriaActividad } from '@/app/actions/memorias'
-import type { MemoriaState } from '@/app/actions/memorias'
+import { useRouter } from 'next/navigation'
+import { crearActividad } from '@/app/actions/actividades'
+import type { Actividad } from '@/lib/types/admin'
+import type { ComentarioPublico } from '@/lib/types/comentarios'
+import type { InscripcionAdmin } from '@/lib/inscripciones-query'
+import ActividadDetalleModal from '@/components/admin/ActividadDetalleModal'
 
-interface Actividad {
-  id_actividad: number
-  titulo: string
-  tipo: string
-  fecha_publicacion: string
-  fecha_fin: string | null
+interface Props {
+  actividades: Actividad[]
+  comentariosPorActividad?: Record<number, ComentarioPublico[]>
+  inscripcionesPorActividad?: Record<number, InscripcionAdmin[]>
 }
 
-export default function ActividadesClient({ actividades }: { actividades: Actividad[] }) {
+export default function ActividadesClient({ actividades, comentariosPorActividad = {}, inscripcionesPorActividad = {} }: Props) {
+  const router = useRouter()
   const [showModal, setShowModal] = useState(false)
-  const [memoriaActividadId, setMemoriaActividadId] = useState<number | null>(null)
-  const [memoriaActividadTitulo, setMemoriaActividadTitulo] = useState<string>('')
+  const [selectedActividad, setSelectedActividad] = useState<Actividad | null>(null)
   const [state, action, isPending] = useActionState(crearActividad, undefined)
-  const [memoriaState, memoriaAction, memoriaPending] = useActionState<MemoriaState, FormData>(
-    guardarMemoriaActividad,
-    undefined
-  )
 
-  const handleDelete = async (id: number) => {
-    if (confirm('¿Estás seguro de eliminar esta actividad?')) {
-      await eliminarActividad(id)
-    }
-  }
-
-  const abrirMemoria = (id: number, titulo: string) => {
-    setMemoriaActividadId(id)
-    setMemoriaActividadTitulo(titulo)
-  }
-
-  const cerrarMemoria = () => {
-    setMemoriaActividadId(null)
-    setMemoriaActividadTitulo('')
-  }
-
-  // Auto-cerrar modal de memoria si la acción fue exitosa
-  if (memoriaState?.success && memoriaActividadId !== null) {
-    cerrarMemoria()
+  const handleRowClick = (act: Actividad) => {
+    setSelectedActividad(act)
   }
 
   return (
@@ -61,7 +41,7 @@ export default function ActividadesClient({ actividades }: { actividades: Activi
               <th style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>Tipo</th>
               <th style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>Publicación</th>
               <th style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>Fecha de Cierre</th>
-              <th style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)', textAlign: 'right' }}>Acciones</th>
+              <th style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>Estado</th>
             </tr>
           </thead>
           <tbody>
@@ -72,46 +52,56 @@ export default function ActividadesClient({ actividades }: { actividades: Activi
                 </td>
               </tr>
             ) : (
-              actividades.map((act) => (
-                <tr key={act.id_actividad}>
-                  <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-                    <strong>{act.titulo}</strong>
-                  </td>
-                  <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-                    <span className={`badge badge-${act.tipo.toLowerCase()}`}>{act.tipo}</span>
-                  </td>
-                  <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-                    {new Date(act.fecha_publicacion).toLocaleDateString('es-EC')}
-                  </td>
-                  <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-                    {act.fecha_fin
-                      ? new Date(act.fecha_fin).toLocaleDateString('es-EC')
-                      : 'N/A'}
-                  </td>
-                  <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)', textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                      {/* Botón Memoria Fotográfica */}
-                      <button
-                        onClick={() => abrirMemoria(act.id_actividad, act.titulo)}
-                        style={{
-                          background: 'none', border: '1.5px solid #706f6f', color: '#706f6f',
-                          borderRadius: '6px', padding: '0.2rem 0.6rem',
-                          cursor: 'pointer', fontWeight: 600, fontSize: '0.82rem'
-                        }}
-                        title="Añadir memoria fotográfica"
-                      >
-                        📷 Memoria
-                      </button>
-                      <button
-                        onClick={() => handleDelete(act.id_actividad)}
-                        style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              actividades.map((act) => {
+                const fechaFin = act.fecha_fin ? new Date(act.fecha_fin) : null
+                const esVigente = !fechaFin || fechaFin >= new Date()
+                const esOculto = act.visible === false
+
+                return (
+                  <tr
+                    key={act.id_actividad}
+                    onClick={() => handleRowClick(act)}
+                    style={{ cursor: 'pointer', transition: 'background 0.15s', opacity: esOculto ? 0.55 : 1 }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-bg-alt)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+                  >
+                    <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
+                      <strong>{act.titulo}</strong>
+                      {esOculto && (
+                        <span style={{
+                          marginLeft: '0.5rem', fontSize: '0.72rem', background: '#fef2f2',
+                          color: '#991b1b', padding: '2px 8px', borderRadius: '10px', fontWeight: 600
+                        }}>
+                          Oculto
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
+                      <span className={`badge badge-${act.tipo.toLowerCase()}`}>{act.tipo}</span>
+                    </td>
+                    <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
+                      {new Date(act.fecha_publicacion).toLocaleDateString('es-EC')}
+                    </td>
+                    <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
+                      {act.fecha_fin
+                        ? new Date(act.fecha_fin).toLocaleDateString('es-EC')
+                        : 'N/A'}
+                    </td>
+                    <td style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
+                      <span style={{
+                        padding: '0.2rem 0.65rem',
+                        borderRadius: '12px',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        background: esVigente ? '#dcfce7' : '#fef3c7',
+                        color: esVigente ? '#166534' : '#92400e',
+                      }}>
+                        {esVigente ? '● Vigente' : '● Finalizado'}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>
@@ -174,58 +164,15 @@ export default function ActividadesClient({ actividades }: { actividades: Activi
         </div>
       )}
 
-      {/* ────── MODAL MEMORIA FOTOGRÁFICA ────── */}
-      {memoriaActividadId !== null && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
-          <div style={{ background: '#fff', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--color-secondary)' }}>📷 Memoria del evento</h3>
-              <button onClick={cerrarMemoria} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
-            </div>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              <strong>{memoriaActividadTitulo}</strong> — Añade un resumen de cómo salió el evento y las URLs de las fotos.
-            </p>
-
-            {memoriaState?.error && <div className="form-error" style={{ marginBottom: '1rem' }}>{memoriaState.error}</div>}
-
-            <form action={memoriaAction}>
-              <input type="hidden" name="id_actividad" value={memoriaActividadId} />
-
-              <div className="form-group">
-                <label className="form-label">Resumen del evento (actualiza la descripción)</label>
-                <textarea
-                  name="resumen"
-                  className="form-input"
-                  rows={4}
-                  placeholder="Describe cómo salió el evento, logros, agradecimientos..."
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">URLs de fotografías (una por línea)</label>
-                <textarea
-                  name="fotos_urls"
-                  className="form-input"
-                  rows={5}
-                  placeholder={"https://ejemplo.com/foto1.jpg\nhttps://ejemplo.com/foto2.jpg\nhttps://ejemplo.com/foto3.jpg"}
-                />
-                <small style={{ color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
-                  Sube las fotos a Supabase Storage o a un servicio externo y pega aquí cada URL en una línea separada.
-                </small>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button type="button" className="btn btn-outline" onClick={cerrarMemoria} style={{ flex: 1 }}>Cancelar</button>
-                <button type="submit" className="btn btn-primary" disabled={memoriaPending} style={{ flex: 1 }}>
-                  {memoriaPending ? 'Guardando...' : '💾 Guardar Memoria'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* ────── MODAL DETALLE ────── */}
+      {selectedActividad && (
+        <ActividadDetalleModal
+          actividad={selectedActividad}
+          comentarios={comentariosPorActividad[selectedActividad.id_actividad] || []}
+          inscripciones={inscripcionesPorActividad[selectedActividad.id_actividad] || []}
+          onClose={() => setSelectedActividad(null)}
+          onRefresh={() => router.refresh()}
+        />
       )}
     </>
   )

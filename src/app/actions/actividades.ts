@@ -123,3 +123,46 @@ export async function eliminarActividad(id: number): Promise<ActionState> {
     return { error: 'No autorizado.' }
   }
 }
+
+export async function toggleVisibilidadActividad(id: number, visible: boolean): Promise<ActionState> {
+  try {
+    await requireAdmin()
+    const { error } = await supabaseAdmin
+      .from('actividades')
+      .update({ visible })
+      .eq('id_actividad', id)
+
+    if (error) return { error: 'Error al cambiar visibilidad: ' + error.message }
+
+    revalidateActividadPaths()
+    return { success: visible ? 'Actividad visible al público.' : 'Actividad oculta del público.' }
+  } catch {
+    return { error: 'No autorizado.' }
+  }
+}
+
+export async function actualizarInfoActividad(
+  id: number,
+  data: { titulo?: string; descripcion?: string; fecha_inicio?: string; fecha_fin?: string }
+): Promise<ActionState> {
+  try {
+    await requireAdmin()
+    const payload: Record<string, unknown> = {}
+    if (data.titulo !== undefined) payload.titulo = data.titulo
+    if (data.descripcion !== undefined) payload.descripcion = data.descripcion
+    if (data.fecha_inicio !== undefined) payload.fecha_inicio = data.fecha_inicio || null
+    if (data.fecha_fin !== undefined) payload.fecha_fin = data.fecha_fin || null
+
+    const { error } = await supabaseAdmin
+      .from('actividades')
+      .update(payload)
+      .eq('id_actividad', id)
+
+    if (error) return { error: 'Error al actualizar: ' + error.message }
+
+    revalidateActividadPaths()
+    return { success: 'Información actualizada.' }
+  } catch {
+    return { error: 'No autorizado.' }
+  }
+}

@@ -14,7 +14,14 @@ export default function SidePanelActivos({ items }: { items: Activity[] }) {
     <div className={styles.panel}>
       <div className={styles.header}>
         <h3 className={styles.headerTitle}>
-          <span className={styles.pulseIcon}>🔥</span> Últimos Eventos
+          <span className={styles.pulseIcon}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+              <line x1="16" x2="16" y1="2" y2="6"/>
+              <line x1="8" x2="8" y1="2" y2="6"/>
+              <line x1="3" x2="21" y1="10" y2="10"/>
+            </svg>
+          </span> Últimos Eventos
         </h3>
       </div>
 
@@ -31,7 +38,13 @@ export default function SidePanelActivos({ items }: { items: Activity[] }) {
                     <img src={imagen} alt={item.titulo} className={styles.cardImage} loading="lazy" />
                   ) : (
                     <div className={styles.cardImagePlaceholder}>
-                      <span>📰</span>
+                      <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                          <circle cx="9" cy="9" r="2"/>
+                          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                        </svg>
+                      </span>
                     </div>
                   )}
                 </div>

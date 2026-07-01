@@ -50,6 +50,7 @@ export async function fetchActividadesPublicas(limit = 9) {
   const { data, error } = await supabaseAdmin
     .from('actividades')
     .select(ACTIVIDADES_SELECT)
+    .eq('visible', true)
     .order('fecha_publicacion', { ascending: false })
     .limit(limit)
 
