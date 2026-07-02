@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { login, actualizarAdminPrueba } from '@/app/actions/auth'
+import { login } from '@/app/actions/auth'
 import LoadingOverlay from '@/components/LoadingOverlay'
 import Link from 'next/link'
 import styles from './page.module.css'
@@ -59,17 +59,6 @@ export default function LoginPage() {
             {isPending ? 'Iniciando sesión...' : 'Ingresar'}
           </button>
         </form>
-
-        <div style={{ marginTop: '2rem', borderTop: '1px solid #ccc', paddingTop: '1rem' }}>
-          <p style={{ color: 'orange', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '0.5rem', textAlign: 'center' }}>[DEV] Actualizar Credenciales Admin</p>
-          <form action={actualizarAdminPrueba} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <input type="email" name="new_email" placeholder="Nuevo Correo" required className="form-input" style={{ borderColor: 'orange' }} />
-            <input type="text" name="new_password" placeholder="Nueva Contraseña" required className="form-input" style={{ borderColor: 'orange' }} />
-            <button type="submit" className="btn btn-outline" style={{ borderColor: 'orange', color: 'orange' }}>
-              Actualizar Admin y Guardar
-            </button>
-          </form>
-        </div>
 
         <div className={styles.loginFooter}>
           <Link href="/" className={styles.backLink}>

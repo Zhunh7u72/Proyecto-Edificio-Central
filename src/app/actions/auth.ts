@@ -50,23 +50,3 @@ export async function logout() {
   await deleteSession()
   redirect('/admin/login')
 }
-
-export async function actualizarAdminPrueba(formData: FormData) {
-  const rawEmail = formData.get('new_email')?.toString();
-  const newEmail = rawEmail ? rawEmail.trim().toLowerCase() : null;
-  const newPassword = formData.get('new_password')?.toString();
-
-  if (!newEmail || !newPassword) return;
-
-  const hash = await bcrypt.hash(newPassword, 10)
-  try {
-    await query(
-      `INSERT INTO usuarios (nombres, apellidos, correo, password_hash, rol) 
-       VALUES ('Administrador', 'FEUE', $1, $2, 'Administrador FEUE')
-       ON CONFLICT (correo) DO UPDATE SET password_hash = $2`,
-      [newEmail, hash]
-    )
-  } catch (e) {
-    console.error('Error actualizando admin de prueba:', e)
-  }
-}
