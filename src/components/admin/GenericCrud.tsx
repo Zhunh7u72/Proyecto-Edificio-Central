@@ -187,7 +187,7 @@ export default function GenericCrud<T extends object>({
                       </select>
                     ) : field.type === 'file' ? (
                       <div className={styles.fileField}>
-                        {editing && (editing as Record<string, unknown>)['ruta_archivo'] && (
+                        {editing && String((editing as Record<string, unknown>)['ruta_archivo'] || '') && (
                           <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <span style={{ fontSize: '0.85rem', color: '#666' }}>Archivo actual existe.</span>
                             {onDeleteFile && (
@@ -198,10 +198,10 @@ export default function GenericCrud<T extends object>({
                                 onClick={async () => {
                                   if (confirm('¿Borrar este archivo físicamente del servidor? Esta acción no se puede deshacer.')) {
                                     const res = await onDeleteFile(Number((editing as Record<string, unknown>)[idField]))
-                                    if (res.success) {
+                                    if (res?.success) {
                                       alert(res.success)
                                       closeModal()
-                                    } else if (res.error) {
+                                    } else if (res?.error) {
                                       alert(res.error)
                                     }
                                   }
