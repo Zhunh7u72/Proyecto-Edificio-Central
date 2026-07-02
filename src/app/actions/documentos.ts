@@ -1,16 +1,10 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabase'
-import { getSession } from '@/lib/session'
+import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 import { TIPO_ARCHIVO_PDF } from '@/lib/actividad-archivos'
 import type { ActionState } from '@/lib/types/admin'
-
-async function requireAdmin() {
-  const session = await getSession()
-  if (!session) throw new Error('No autorizado.')
-  return session
-}
 
 function revalidate() {
   revalidatePath('/admin/documentos')

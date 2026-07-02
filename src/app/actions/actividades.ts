@@ -1,16 +1,10 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabase'
-import { getSession } from '@/lib/session'
+import { requireAdmin, parsePositiveInt } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
-import { syncImagenActividad, eliminarArchivosActividad } from '@/lib/actividad-archivos'
+import { syncImagenActividad, eliminarDependenciasActividad } from '@/lib/actividad-archivos'
 import type { ActionState } from '@/lib/types/admin'
-
-async function requireAdmin() {
-  const session = await getSession()
-  if (!session) throw new Error('No autorizado.')
-  return session
-}
 
 function buildActividadPayload(formData: FormData, tipo: string) {
   const titulo = (formData.get('titulo') as string)?.trim()
@@ -38,6 +32,7 @@ function revalidateActividadPaths() {
   revalidatePath('/admin/talleres')
   revalidatePath('/admin/actividades')
   revalidatePath('/admin/dashboard')
+  revalidatePath('/admin/inscripciones')
   revalidatePath('/')
 }
 
@@ -81,7 +76,8 @@ export async function actualizarActividad(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
-    const id = parseInt(formData.get('id_actividad') as string)
+    const id = parsePositiveInt(formData.get('id_actividad'))
+    if (!id) return { error: 'ID de actividad inválido.' }
     const tipo = formData.get('tipo') as string
     const { error, payload } = buildActividadPayload(formData, tipo)
 
@@ -107,8 +103,9 @@ export async function actualizarActividad(
 export async function eliminarActividad(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
+    if (!Number.isFinite(id) || id <= 0) return { error: 'ID de actividad inválido.' }
 
-    await eliminarArchivosActividad(id)
+    await eliminarDependenciasActividad(id)
 
     const { error } = await supabaseAdmin
       .from('actividades')
@@ -119,8 +116,10 @@ export async function eliminarActividad(id: number): Promise<ActionState> {
 
     revalidateActividadPaths()
     return { success: 'Registro eliminado.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Error desconocido.'
+    if (message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Error al eliminar: ' + message }
   }
 }
 

@@ -8,6 +8,7 @@ import type { MemoriaState } from '@/app/actions/memorias'
 import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
+import { urlPdfInscripcionAdmin } from '@/lib/inscripcion-pdf-url'
 import styles from './ActividadDetalleModal.module.css'
 
 type Tab = 'info' | 'inscritos' | 'comentarios' | 'memoria'
@@ -255,10 +256,21 @@ export default function ActividadDetalleModal({ actividad, comentarios, inscripc
                           <td>{new Date(ins.fecha_registro).toLocaleDateString('es-EC')}</td>
                           <td>
                             {ins.pdf_ruta ? (
-                              <a href={ins.pdf_ruta} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--utn-red)', fontWeight: 600 }}>
-                                📄 Ver PDF
-                              </a>
-                            ) : '—'}
+                              <div className={styles.pdfLinks}>
+                                <a
+                                  href={urlPdfInscripcionAdmin(ins.pdf_ruta, 'ver')}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Ver
+                                </a>
+                                <a href={urlPdfInscripcionAdmin(ins.pdf_ruta, 'descargar')}>
+                                  Descargar
+                                </a>
+                              </div>
+                            ) : (
+                              '—'
+                            )}
                           </td>
                         </tr>
                       ))}

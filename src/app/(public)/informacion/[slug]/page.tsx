@@ -21,7 +21,7 @@ function renderParagraphs(text: string) {
   ))
 }
 
-async function getPageContent(slug: InformacionSlug) {
+async function getPageContent(slug: string) {
   switch (slug) {
     case 'principios':
       return renderParagraphs(PRINCIPIOS_CONTENT)
@@ -29,26 +29,20 @@ async function getPageContent(slug: InformacionSlug) {
       return renderParagraphs(OBJETIVOS_CONTENT)
     case 'fines':
       return renderParagraphs(FINES_CONTENT)
-    case 'mision': {
-      const { data } = await supabase
-        .from('informacion_institucional')
-        .select('mision')
-        .limit(1)
-        .single()
-      return <p>{data?.mision || 'Información no disponible.'}</p>
-    }
+    case 'mision':
     case 'vision': {
       const { data } = await supabase
         .from('informacion_institucional')
-        .select('vision')
+        .select('mision, vision')
         .limit(1)
-        .single()
-      return <p>{data?.vision || 'Información no disponible.'}</p>
+        .maybeSingle()
+      const text = slug === 'mision' ? data?.mision : data?.vision
+      return <p>{text || 'Información no disponible.'}</p>
     }
     case 'autoridades': {
       const { data: autoridades } = await supabase
         .from('autoridades_info_institucional')
-        .select('*')
+        .select('id_autoridades_info_institu, nombres, apellidos, correo_contactos, ruta_foto')
 
       if (!autoridades || autoridades.length === 0) {
         return <p>Información no disponible.</p>

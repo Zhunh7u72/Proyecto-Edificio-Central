@@ -8,6 +8,7 @@ import {
 } from '@/app/actions/actividades'
 import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
+import type { InscripcionAdmin } from '@/lib/inscripciones-query'
 import AdminComentariosModal from '@/components/admin/AdminComentariosModal'
 import LoadingOverlay from '@/components/LoadingOverlay'
 import styles from './admin.module.css'
@@ -18,6 +19,7 @@ interface ActividadCrudProps {
   pageDescription: string
   actividades: Actividad[]
   comentariosPorActividad?: Record<number, ComentarioPublico[]>
+  inscripcionesPorActividad?: Record<number, InscripcionAdmin[]>
   dbError?: string | null
 }
 
@@ -35,7 +37,7 @@ function getFechaInicio(act: Actividad) {
 }
 
 function getFechaFin(act: Actividad) {
-  return act.fecha_fin || act.fecha_limite_inscripcion
+  return act.fecha_fin
 }
 
 export default function ActividadCrud({

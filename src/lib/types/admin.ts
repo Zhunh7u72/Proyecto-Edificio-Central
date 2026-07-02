@@ -5,12 +5,11 @@ export interface Actividad {
   descripcion: string | null
   tipo: string
   fecha_publicacion: string
-  fecha_limite_inscripcion: string | null
+  fecha_fin: string | null
   url_imagen?: string | null
   visible?: boolean
   /** Alias de formulario / UI */
   fecha_inicio?: string | null
-  fecha_fin?: string | null
 }
 
 export interface Facultad {

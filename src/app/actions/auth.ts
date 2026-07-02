@@ -20,7 +20,7 @@ export async function login(state: LoginState, formData: FormData): Promise<Logi
   // Buscar usuario con rol Administrador FEUE
   const { data: usuario, error } = await supabaseAdmin
     .from('usuarios')
-    .select('*')
+    .select('id_usuario, rol, password_hash')
     .eq('correo', correo)
     .eq('rol', 'Administrador FEUE')
     .single()

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
+import { urlPdfInscripcionAdmin } from '@/lib/inscripcion-pdf-url'
 import styles from '@/components/admin/admin.module.css'
 
 export default function InscripcionesClient({
@@ -19,19 +20,15 @@ export default function InscripcionesClient({
     return inscripciones.filter((i) => i.actividades?.tipo === filtroTipo)
   }, [inscripciones, filtroTipo])
 
-  const handleDescargarPdf = async (ruta: string) => {
+  const handleDescargarPdf = (ruta: string) => {
     setDescargando(ruta)
-    try {
-      const url = `/api/admin/descarga-pdf?ruta=${encodeURIComponent(ruta)}`
-      const a = document.createElement('a')
-      a.href = url
-      a.download = ruta.split('/').pop() ?? 'documento.pdf'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-    } finally {
-      setDescargando(null)
-    }
+    const a = document.createElement('a')
+    a.href = urlPdfInscripcionAdmin(ruta, 'descargar')
+    a.download = ruta.split('/').pop() ?? 'documento.pdf'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setDescargando(null)
   }
 
   const totalConPdf = inscripciones.filter((i) => i.pdf_ruta).length
@@ -128,24 +125,26 @@ export default function InscripcionesClient({
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     {ins.pdf_ruta ? (
-                      <button
-                        className={styles.btnView}
-                        onClick={() => handleDescargarPdf(ins.pdf_ruta!)}
-                        disabled={descargando === ins.pdf_ruta}
-                        title="Descargar documento PDF del estudiante"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.3rem',
-                          padding: '0.3rem 0.75rem',
-                          border: '1.5px solid var(--utn-red)',
-                          borderRadius: '6px',
-                          fontSize: '0.8rem',
-                        }}
-                      >
-                        {descargando === ins.pdf_ruta ? '⏳' : '⬇️'}{' '}
-                        {descargando === ins.pdf_ruta ? 'Descargando...' : 'PDF'}
-                      </button>
+                      <div className={styles.pdfActions}>
+                        <a
+                          href={urlPdfInscripcionAdmin(ins.pdf_ruta, 'ver')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.btnPdfAction}
+                          title="Visualizar PDF en el navegador"
+                        >
+                          Ver
+                        </a>
+                        <button
+                          type="button"
+                          className={styles.btnPdfAction}
+                          onClick={() => handleDescargarPdf(ins.pdf_ruta!)}
+                          disabled={descargando === ins.pdf_ruta}
+                          title="Descargar PDF"
+                        >
+                          {descargando === ins.pdf_ruta ? '...' : 'Descargar'}
+                        </button>
+                      </div>
                     ) : (
                       <span style={{ color: 'var(--utn-gray)', fontSize: '0.82rem' }}>
                         Sin documento

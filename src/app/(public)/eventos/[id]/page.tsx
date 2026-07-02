@@ -22,6 +22,7 @@ export default async function EventPage({ params }: EventPageProps) {
     .from('actividades')
     .select(`${ACTIVIDADES_SELECT}, usuarios(nombres, apellidos)`)
     .eq('id_actividad', parseInt(id))
+    .eq('visible', true)
     .single()
 
   if (error || !actividad) {
@@ -31,7 +32,7 @@ export default async function EventPage({ params }: EventPageProps) {
   // Obtener inscritos (solo cuenta)
   const { count: inscritosCount } = await supabase
     .from('matriculas_eventos')
-    .select('*', { count: 'exact', head: true })
+    .select('id_matricula', { count: 'exact', head: true })
     .eq('id_actividad', actividad.id_actividad)
 
   const fechaPub = new Date(actividad.fecha_publicacion).toLocaleDateString('es-EC', {
@@ -40,6 +41,9 @@ export default async function EventPage({ params }: EventPageProps) {
   
   const esInscripcionAbierta = actividad.fecha_fin && new Date() <= new Date(actividad.fecha_fin)
   const imagenes = getRutasImagenesActividad(actividad)
+
+  const autorRaw = actividad.usuarios as { nombres: string; apellidos: string } | { nombres: string; apellidos: string }[] | null
+  const autor = Array.isArray(autorRaw) ? autorRaw[0] : autorRaw
 
   const { comentarios } = await fetchComentariosActividad(actividad.id_actividad)
     return (
@@ -53,7 +57,7 @@ export default async function EventPage({ params }: EventPageProps) {
             <span className={styles.date}>Publicado el {fechaPub}</span>
           </div>
           <h1 className={styles.title}>{actividad.titulo}</h1>
-          <p className={styles.author}>Publicado por: {actividad.usuarios?.nombres} {actividad.usuarios?.apellidos}</p>
+          <p className={styles.author}>Publicado por: {autor?.nombres} {autor?.apellidos}</p>
         </div>
       </div>
 

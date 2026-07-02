@@ -332,6 +332,41 @@
   text-decoration: underline;
 }
 
+.pdfActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.btnPdfAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.65rem;
+  border: 1.5px solid var(--utn-red);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--utn-red);
+  background: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.btnPdfAction:hover:not(:disabled) {
+  background: var(--utn-red);
+  color: #fff;
+}
+
+.btnPdfAction:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .modalWide {
   max-width: 680px;
 }

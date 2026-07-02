@@ -272,6 +272,23 @@
   background: var(--color-bg-alt);
 }
 
+.pdfLinks {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pdfLinks a {
+  color: var(--utn-red);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.pdfLinks a:hover {
+  text-decoration: underline;
+}
+
 .deleteCommentBtn {
   background: none;
   border: none;

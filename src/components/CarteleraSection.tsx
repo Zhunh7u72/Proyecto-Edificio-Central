@@ -10,7 +10,7 @@ export interface CarteleraActividad {
   descripcion: string | null
   tipo: string
   fecha_publicacion: string
-  fecha_limite_inscripcion: string | null
+  fecha_fin: string | null
   url_imagen: string | null
 }
 
@@ -38,7 +38,7 @@ export default function CarteleraSection({ actividades }: CarteleraSectionProps)
                 descripcion={act.descripcion}
                 tipo={act.tipo}
                 fecha_publicacion={act.fecha_publicacion}
-                fecha_limite_inscripcion={act.fecha_limite_inscripcion}
+                fecha_fin={act.fecha_fin}
                 url_imagen={act.url_imagen}
               />
             </ScrollReveal>

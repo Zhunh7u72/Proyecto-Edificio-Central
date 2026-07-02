@@ -7,7 +7,7 @@ interface EventCardProps {
   descripcion: string | null
   tipo: string
   fecha_publicacion: string
-  fecha_limite_inscripcion: string | null
+  fecha_fin: string | null
   url_imagen?: string | null
 }
 
@@ -22,7 +22,7 @@ export default function EventCard({
   descripcion,
   tipo,
   fecha_publicacion,
-  fecha_limite_inscripcion,
+  fecha_fin,
   url_imagen,
 }: EventCardProps) {
   const fecha = new Date(fecha_publicacion)
@@ -55,10 +55,10 @@ export default function EventCard({
         <p className={styles.tipoLabel}>{tipoLabel(tipo)}</p>
         <h3 className={styles.title}>{titulo}</h3>
         <p className={styles.excerpt}>{resumen}</p>
-        {fecha_limite_inscripcion && (
+        {fecha_fin && (
           <p className={styles.deadline}>
             Inscripción hasta{' '}
-            {new Date(fecha_limite_inscripcion).toLocaleDateString('es-EC', {
+            {new Date(fecha_fin).toLocaleDateString('es-EC', {
               day: 'numeric',
               month: 'short',
               year: 'numeric',

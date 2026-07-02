@@ -68,6 +68,7 @@ export async function fetchDocumentosPublicos() {
     .from('archivos_actividades')
     .select('id_archivo_activi, ruta_archivo, actividades(titulo, tipo)')
     .eq('tipo_archivo', TIPO_ARCHIVO_PDF)
+    .is('id_usuario', null)
     .order('id_archivo_activi', { ascending: false })
 
   const documentos: DocumentoPublico[] = (data ?? []).map((row) => {

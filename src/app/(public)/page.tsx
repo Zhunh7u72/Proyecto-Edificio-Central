@@ -10,28 +10,21 @@ import styles from './page.module.css'
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  // 1. Últimos 4 eventos para el panel lateral izquierdo
-  const { data: recientes } = await supabase
-    .from('actividades')
-    .select(ACTIVIDADES_SELECT)
-    .eq('visible', true)
-    .order('fecha_publicacion', { ascending: false })
-    .limit(4)
+  const [{ data: agendaMes, error: errorAgenda }, { data: config }] = await Promise.all([
+    supabase
+      .from('actividades')
+      .select(ACTIVIDADES_SELECT)
+      .eq('visible', true)
+      .order('fecha_publicacion', { ascending: false })
+      .limit(12),
+    supabase
+      .from('informacion_institucional')
+      .select('carrusel_urls')
+      .limit(1)
+      .maybeSingle(),
+  ])
 
-  // 2. Agenda completa para la cartelera inferior (últimas 12)
-  const { data: agendaMes, error: errorAgenda } = await supabase
-    .from('actividades')
-    .select(ACTIVIDADES_SELECT)
-    .eq('visible', true)
-    .order('fecha_publicacion', { ascending: false })
-    .limit(12)
-
-  // 3. Obtener configuración institucional (carrusel)
-  const { data: config } = await supabase
-    .from('informacion_institucional')
-    .select('carrusel_urls')
-    .limit(1)
-    .single()
+  const recientes = (agendaMes ?? []).slice(0, 4)
 
   return (
     <>
@@ -64,7 +57,7 @@ export default async function HomePage() {
             descripcion: act.descripcion,
             tipo: act.tipo,
             fecha_publicacion: act.fecha_publicacion,
-            fecha_limite_inscripcion: act.fecha_limite_inscripcion,
+            fecha_fin: act.fecha_fin,
             url_imagen: getRutaImagenActividad(act),
           }))}
         />

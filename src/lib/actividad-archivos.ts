@@ -106,5 +106,42 @@ export async function eliminarArchivosActividad(id_actividad: number) {
     .eq('id_actividad', id_actividad)
 }
 
-export const ACTIVIDADES_SELECT =
-  '*, archivos_actividades(id_archivo_activi, ruta_archivo, tipo_archivo)'
+/** Elimina inscripciones, comentarios y archivos antes de borrar la actividad. */
+export async function eliminarDependenciasActividad(id_actividad: number) {
+  const { data: comentarios } = await supabaseAdmin
+    .from('comentarios')
+    .select('id_comentario')
+    .eq('id_actividad', id_actividad)
+
+  const idsComentarios = (comentarios ?? []).map((c) => c.id_comentario)
+
+  if (idsComentarios.length > 0) {
+    const { error: archivosError } = await supabaseAdmin
+      .from('archivos_interaccion')
+      .delete()
+      .in('id_comentario', idsComentarios)
+
+    if (archivosError) throw new Error(archivosError.message)
+  }
+
+  const { error: comentariosError } = await supabaseAdmin
+    .from('comentarios')
+    .delete()
+    .eq('id_actividad', id_actividad)
+
+  if (comentariosError) throw new Error(comentariosError.message)
+
+  const { error: inscripcionesError } = await supabaseAdmin
+    .from('matriculas_eventos')
+    .delete()
+    .eq('id_actividad', id_actividad)
+
+  if (inscripcionesError) throw new Error(inscripcionesError.message)
+
+  await eliminarArchivosActividad(id_actividad)
+}
+
+export const ACTIVIDADES_COLUMNS =
+  'id_actividad, id_usuario, titulo, descripcion, tipo, fecha_publicacion, fecha_inicio, fecha_fin, visible'
+
+export const ACTIVIDADES_SELECT = `${ACTIVIDADES_COLUMNS}, archivos_actividades(id_archivo_activi, ruta_archivo, tipo_archivo)`

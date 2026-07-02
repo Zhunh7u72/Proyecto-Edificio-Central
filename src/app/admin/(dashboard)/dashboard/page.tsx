@@ -18,19 +18,20 @@ export default async function DashboardPage() {
     { count: facultadesCount },
     { count: comentariosCount },
   ] = await Promise.all([
-    supabase.from('actividades').select('*', { count: 'exact', head: true }),
-    supabase.from('matriculas_eventos').select('*', { count: 'exact', head: true }),
-    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('rol', 'Estudiante'),
-    supabase.from('actividades').select('*', { count: 'exact', head: true }).eq('tipo', 'Anuncio'),
-    supabase.from('actividades').select('*', { count: 'exact', head: true }).eq('tipo', 'Evento'),
-    supabase.from('actividades').select('*', { count: 'exact', head: true }).eq('tipo', 'Capacitacion'),
-    supabase.from('fotos_carreras').select('*', { count: 'exact', head: true }),
+    supabase.from('actividades').select('id_actividad', { count: 'exact', head: true }),
+    supabase.from('matriculas_eventos').select('id_matricula', { count: 'exact', head: true }),
+    supabase.from('usuarios').select('id_usuario', { count: 'exact', head: true }).eq('rol', 'Estudiante'),
+    supabase.from('actividades').select('id_actividad', { count: 'exact', head: true }).eq('tipo', 'Anuncio'),
+    supabase.from('actividades').select('id_actividad', { count: 'exact', head: true }).eq('tipo', 'Evento'),
+    supabase.from('actividades').select('id_actividad', { count: 'exact', head: true }).eq('tipo', 'Capacitacion'),
+    supabase.from('fotos_carreras').select('id_foto_carre', { count: 'exact', head: true }),
     supabase
       .from('archivos_actividades')
-      .select('*', { count: 'exact', head: true })
-      .eq('tipo_archivo', TIPO_ARCHIVO_PDF),
-    supabase.from('facultades').select('*', { count: 'exact', head: true }),
-    supabase.from('comentarios').select('*', { count: 'exact', head: true }),
+      .select('id_archivo_activi', { count: 'exact', head: true })
+      .eq('tipo_archivo', TIPO_ARCHIVO_PDF)
+      .is('id_usuario', null),
+    supabase.from('facultades').select('id_facultad', { count: 'exact', head: true }),
+    supabase.from('comentarios').select('id_comentario', { count: 'exact', head: true }),
   ])
 
   const stats = [

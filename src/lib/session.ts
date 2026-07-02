@@ -3,6 +3,10 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
 const secretKey = process.env.SESSION_SECRET
+if (!secretKey || secretKey.length < 16) {
+  throw new Error('SESSION_SECRET debe estar definido y tener al menos 16 caracteres.')
+}
+
 const encodedKey = new TextEncoder().encode(secretKey)
 
 interface SessionPayload {

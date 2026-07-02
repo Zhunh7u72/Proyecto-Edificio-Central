@@ -6,11 +6,13 @@ export const dynamic = 'force-dynamic'
 export default async function InstitucionalPage() {
   const { data: autoridades } = await supabase
     .from('autoridades_info_institucional')
-    .select('*')
+    .select('id_autoridades_info_institu, nombres, apellidos, correo_contactos, ruta_foto')
 
   const { data: facultades } = await supabase
     .from('facultades')
-    .select(`*, facultades_carreras(*, contactos_carreras(*))`)
+    .select(
+      'id_facultad, nombre_facultad, facultades_carreras(id_facultad_carrera, nombre_carrera, contactos_carreras(contacto, tipo_contacto))'
+    )
 
   return (
     <div className={styles.pageWrapper}>

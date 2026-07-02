@@ -1,6 +1,7 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabase'
+import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 
 export type MemoriaState = { error?: string; success?: string } | undefined
@@ -13,6 +14,8 @@ export async function guardarMemoriaActividad(
   state: MemoriaState,
   formData: FormData
 ): Promise<MemoriaState> {
+  try {
+    await requireAdmin()
   const id_actividad = parseInt(formData.get('id_actividad') as string)
   const resumen = (formData.get('resumen') as string)?.trim()
 
@@ -68,4 +71,7 @@ export async function guardarMemoriaActividad(
   revalidatePath('/historial')
 
   return { success: '¡Memoria guardada! Las fotos ya aparecen en la página pública del evento.' }
+  } catch {
+    return { error: 'No autorizado.' }
+  }
 }

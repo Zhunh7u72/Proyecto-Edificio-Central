@@ -1,14 +1,8 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabase'
-import { getSession } from '@/lib/session'
+import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
-
-async function requireAdmin() {
-  const session = await getSession()
-  if (!session) throw new Error('No autorizado.')
-  return session
-}
 
 export async function actualizarConfiguracionSitio(formData: FormData): Promise<{ error?: string, success?: string }> {
   try {
@@ -17,11 +11,20 @@ export async function actualizarConfiguracionSitio(formData: FormData): Promise<
     // We expect logo (File) and carrusel (multiple Files)
     const logoFile = formData.get('logo') as File | null
     const carruselFiles = formData.getAll('carrusel') as File[]
-    const existingCarrusel = JSON.parse(formData.get('existingCarrusel') as string || '[]')
-    
+    let existingCarrusel: string[] = []
+    try {
+      const raw = formData.get('existingCarrusel') as string
+      const parsed = JSON.parse(raw || '[]')
+      if (Array.isArray(parsed)) {
+        existingCarrusel = parsed.filter((u): u is string => typeof u === 'string').slice(0, 20)
+      }
+    } catch {
+      return { error: 'Datos del carrusel inválidos.' }
+    }
+
     const { data: config } = await supabaseAdmin
       .from('informacion_institucional')
-      .select('*')
+      .select('id_info_inst, logo_url, carrusel_urls')
       .limit(1)
       .maybeSingle()
       

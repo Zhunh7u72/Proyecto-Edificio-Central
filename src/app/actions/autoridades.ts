@@ -1,6 +1,7 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabase'
+import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 
 export type AutoridadState = { error?: string; success?: string } | undefined
@@ -10,6 +11,8 @@ export async function crearAutoridad(
   state: AutoridadState,
   formData: FormData
 ): Promise<AutoridadState> {
+  try {
+    await requireAdmin()
   const nombres = (formData.get('nombres') as string)?.trim()
   const apellidos = (formData.get('apellidos') as string)?.trim()
   const correo = (formData.get('correo_contactos') as string)?.trim()
@@ -43,15 +46,28 @@ export async function crearAutoridad(
   revalidatePath('/admin/institucional')
   revalidatePath('/institucional')
   return { success: `Representante ${nombres} ${apellidos} creado correctamente.` }
+  } catch {
+    return { error: 'No autorizado.' }
+  }
 }
 
 // ── ELIMINAR REPRESENTANTE ────────────────────────────────────────────
-export async function eliminarAutoridad(id: number) {
-  await supabaseAdmin
-    .from('autoridades_info_institucional')
-    .delete()
-    .eq('id_autoridades_info_institu', id)
+export async function eliminarAutoridad(id: number): Promise<AutoridadState> {
+  try {
+    await requireAdmin()
+    if (!Number.isFinite(id) || id <= 0) return { error: 'ID inválido.' }
 
-  revalidatePath('/admin/institucional')
-  revalidatePath('/institucional')
+    const { error } = await supabaseAdmin
+      .from('autoridades_info_institucional')
+      .delete()
+      .eq('id_autoridades_info_institu', id)
+
+    if (error) return { error: 'Error al eliminar: ' + error.message }
+
+    revalidatePath('/admin/institucional')
+    revalidatePath('/institucional')
+    return { success: 'Representante eliminado.' }
+  } catch {
+    return { error: 'No autorizado.' }
+  }
 }

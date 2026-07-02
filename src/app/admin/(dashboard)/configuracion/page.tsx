@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 export default async function ConfiguracionPage() {
   const { data: config } = await supabase
     .from('informacion_institucional')
-    .select('*')
+    .select('id_info_inst, logo_url, carrusel_urls, mision, vision')
     .limit(1)
     .single()
 

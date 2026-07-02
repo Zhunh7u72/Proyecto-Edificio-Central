@@ -1,6 +1,7 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabase'
+import { requireAdmin } from '@/lib/auth-admin'
 import { guardarArchivoComentario } from '@/lib/comentario-archivos'
 import { revalidatePath } from 'next/cache'
 import type { ComentarioState } from '@/lib/types/comentarios'
@@ -10,7 +11,7 @@ async function findOrCreateEstudiante(nombres: string, apellidos: string, correo
     .from('usuarios')
     .select('id_usuario')
     .eq('correo', correo)
-    .single()
+    .maybeSingle()
 
   if (existing) return { userId: existing.id_usuario as number }
 
@@ -66,7 +67,8 @@ export async function publicarComentario(
     .single()
 
   if (comentarioError || !comentario) {
-    return { error: 'Error al publicar el comentario: ' + (comentarioError?.message ?? '') }
+    console.error('[comentario] publicar:', comentarioError)
+    return { error: 'No se pudo publicar el comentario. Intenta nuevamente.' }
   }
 
   const hasFile = archivo && archivo.size > 0 && archivo.name
@@ -95,18 +97,33 @@ export async function publicarComentario(
 
 export async function eliminarComentario(id_comentario: number): Promise<{ error?: string }> {
   try {
+    await requireAdmin()
+    if (!Number.isFinite(id_comentario) || id_comentario <= 0) {
+      return { error: 'ID de comentario inválido.' }
+    }
+
+    const { data: comentario } = await supabaseAdmin
+      .from('comentarios')
+      .select('id_comentario')
+      .eq('id_comentario', id_comentario)
+      .maybeSingle()
+
+    if (!comentario) return { error: 'Comentario no encontrado.' }
+
+    await supabaseAdmin.from('archivos_interaccion').delete().eq('id_comentario', id_comentario)
+
     const { error } = await supabaseAdmin
       .from('comentarios')
       .delete()
       .eq('id_comentario', id_comentario)
-    
+
     if (error) {
       return { error: 'Error al eliminar el comentario: ' + error.message }
     }
-    
+
     revalidatePath('/admin')
     return {}
-  } catch (err: any) {
-    return { error: 'Excepción al eliminar: ' + err.message }
+  } catch {
+    return { error: 'No autorizado.' }
   }
 }

@@ -7,34 +7,46 @@ import {
   PDF_INSCRIPCION_TIPOS,
   BUCKET_DOCUMENTOS_INSCRIPCION,
 } from '@/lib/config'
+import { TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
 
 export type InscripcionState = {
   error?: string
   success?: string
 } | undefined
 
+function inscripcionCerrada(actividad: { fecha_fin: string | null }): boolean {
+  if (!actividad.fecha_fin) return false
+  return new Date() > new Date(actividad.fecha_fin)
+}
+
+function logErrorInterno(contexto: string, error: unknown) {
+  console.error(`[inscripcion] ${contexto}:`, error)
+}
+
 export async function inscribirEstudiante(
   state: InscripcionState,
   formData: FormData
 ): Promise<InscripcionState> {
-  const nombres = formData.get('nombres') as string
-  const apellidos = formData.get('apellidos') as string
-  const correo = formData.get('correo') as string
-  const id_actividad = parseInt(formData.get('id_actividad') as string)
+  const nombres = (formData.get('nombres') as string)?.trim()
+  const apellidos = (formData.get('apellidos') as string)?.trim()
+  const correo = (formData.get('correo') as string)?.trim()
+  const id_actividad = parseInt(formData.get('id_actividad') as string, 10)
   const requiereDocumento = formData.get('requiere_documento') === 'true'
   const archivoPdf = formData.get('pdf_documento') as File | null
 
-  if (!nombres || !apellidos || !correo || !id_actividad) {
+  if (!nombres || !apellidos || !correo || !Number.isFinite(id_actividad) || id_actividad <= 0) {
     return { error: 'Todos los campos son obligatorios.' }
   }
 
-  // Validación del PDF (lado servidor — nunca confiar solo en el cliente)
   if (requiereDocumento && (!archivoPdf || archivoPdf.size === 0)) {
     return { error: 'Este evento requiere que adjuntes un documento PDF.' }
   }
 
   if (archivoPdf && archivoPdf.size > 0) {
-    if (!PDF_INSCRIPCION_TIPOS.includes(archivoPdf.type)) {
+    const esPdf =
+      PDF_INSCRIPCION_TIPOS.includes(archivoPdf.type) ||
+      archivoPdf.name.toLowerCase().endsWith('.pdf')
+    if (!esPdf) {
       return { error: 'Solo se permiten archivos PDF.' }
     }
     if (archivoPdf.size > PDF_INSCRIPCION_MAX_BYTES) {
@@ -43,10 +55,9 @@ export async function inscribirEstudiante(
     }
   }
 
-  // Verificar que la actividad existe y tiene inscripción abierta
   const { data: actividad, error: actError } = await supabaseAdmin
     .from('actividades')
-    .select('*')
+    .select('id_actividad, visible, fecha_fin, tipo')
     .eq('id_actividad', id_actividad)
     .single()
 
@@ -54,21 +65,21 @@ export async function inscribirEstudiante(
     return { error: 'La actividad no existe.' }
   }
 
-  if (actividad.fecha_limite_inscripcion) {
-    const deadline = new Date(actividad.fecha_limite_inscripcion)
-    if (new Date() > deadline) {
-      return { error: 'El plazo de inscripción ha finalizado.' }
-    }
+  if (actividad.visible === false) {
+    return { error: 'Esta actividad no está disponible para inscripción.' }
   }
 
-  // Buscar o crear usuario estudiante
+  if (inscripcionCerrada(actividad)) {
+    return { error: 'El plazo de inscripción ha finalizado.' }
+  }
+
   let userId: number
 
   const { data: existingUser } = await supabaseAdmin
     .from('usuarios')
     .select('id_usuario')
     .eq('correo', correo)
-    .single()
+    .maybeSingle()
 
   if (existingUser) {
     userId = existingUser.id_usuario
@@ -80,33 +91,32 @@ export async function inscribirEstudiante(
       .single()
 
     if (createError || !newUser) {
-      return { error: 'Error al registrar el usuario. El correo podría estar duplicado.' }
+      logErrorInterno('crear usuario', createError)
+      return { error: 'No pudimos registrar tus datos. Verifica tu correo e intenta de nuevo.' }
     }
     userId = newUser.id_usuario
   }
 
-  // Verificar si ya está inscrito
   const { data: existing } = await supabaseAdmin
     .from('matriculas_eventos')
     .select('id_matricula')
     .eq('id_usuario', userId)
     .eq('id_actividad', id_actividad)
-    .single()
+    .maybeSingle()
 
   if (existing) {
     return { error: 'Ya te encuentras inscrito en esta actividad.' }
   }
 
-  // Inscribir
   const { error: enrollError } = await supabaseAdmin
     .from('matriculas_eventos')
     .insert({ id_usuario: userId, id_actividad })
 
   if (enrollError) {
-    return { error: 'Error al realizar la inscripción. Intenta nuevamente.' }
+    logErrorInterno('matrícula', enrollError)
+    return { error: 'No se pudo completar la inscripción. Intenta nuevamente en unos minutos.' }
   }
 
-  // Subir el PDF si se adjuntó uno
   if (archivoPdf && archivoPdf.size > 0) {
     const extension = archivoPdf.name.split('.').pop() ?? 'pdf'
     const rutaArchivo = `actividad_${id_actividad}/usuario_${userId}_${Date.now()}.${extension}`
@@ -116,24 +126,43 @@ export async function inscribirEstudiante(
       .upload(rutaArchivo, archivoPdf, { contentType: 'application/pdf', upsert: false })
 
     if (uploadError) {
-      // La inscripción ya se guardó; solo informamos que el documento falló
-      console.error('Error subiendo PDF:', uploadError.message)
-      revalidatePath(`/eventos/${id_actividad}`)
+      logErrorInterno('subir PDF', uploadError)
+      await supabaseAdmin
+        .from('matriculas_eventos')
+        .delete()
+        .eq('id_usuario', userId)
+        .eq('id_actividad', id_actividad)
+
       return {
-        success:
-          '¡Inscripción exitosa! Sin embargo, no se pudo subir el documento adjunto. Contáctanos si lo necesitas.',
+        error:
+          'No se pudo subir el documento. La inscripción fue cancelada. Verifica que sea un PDF válido e intenta de nuevo.',
       }
     }
 
-    // Registrar el archivo en la tabla Archivos_Actividades
-    await supabaseAdmin.from('archivos_actividades').insert({
+    const { error: archivoError } = await supabaseAdmin.from('archivos_actividades').insert({
       id_actividad,
       id_usuario: userId,
       ruta_archivo: rutaArchivo,
-      tipo_archivo: 'pdf',
+      tipo_archivo: TIPO_ARCHIVO_PDF,
     })
+
+    if (archivoError) {
+      logErrorInterno('registrar PDF en BD', archivoError)
+      await supabaseAdmin.storage.from(BUCKET_DOCUMENTOS_INSCRIPCION).remove([rutaArchivo])
+      await supabaseAdmin
+        .from('matriculas_eventos')
+        .delete()
+        .eq('id_usuario', userId)
+        .eq('id_actividad', id_actividad)
+
+      return {
+        error:
+          'No se pudo completar la inscripción con el documento adjunto. Intenta nuevamente o contacta a la FEUE.',
+      }
+    }
   }
 
   revalidatePath(`/eventos/${id_actividad}`)
+  revalidatePath('/admin/inscripciones')
   return { success: '¡Inscripción exitosa! Te has registrado correctamente.' }
 }

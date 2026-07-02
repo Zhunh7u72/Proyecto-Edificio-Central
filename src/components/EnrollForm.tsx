@@ -29,7 +29,7 @@ export default function EnrollForm({ idActividad, requiereDocumento = false }: E
     }
 
     // Validación de tipo
-    if (!PDF_INSCRIPCION_TIPOS.includes(file.type)) {
+    if (!PDF_INSCRIPCION_TIPOS.includes(file.type) && !file.name.toLowerCase().endsWith('.pdf')) {
       setFileError('Solo se permiten archivos PDF.')
       if (fileInputRef.current) fileInputRef.current.value = ''
       setFileName(null)
