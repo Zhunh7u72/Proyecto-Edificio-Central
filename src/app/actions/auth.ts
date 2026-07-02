@@ -11,7 +11,7 @@ export type LoginState = {
 } | undefined
 
 export async function login(state: LoginState, formData: FormData): Promise<LoginState> {
-  const correo = sanitizarTexto(formData.get('correo'), 254)?.toLowerCase()
+  const correo = parseCorreo(formData.get('correo'))
   const password = sanitizarTexto(formData.get('password'), 128)
 
   if (!correo || !password) {
@@ -49,18 +49,4 @@ export async function login(state: LoginState, formData: FormData): Promise<Logi
 export async function logout() {
   await deleteSession()
   redirect('/admin/login')
-}
-
-export async function crearAdminPrueba() {
-  const hash = await bcrypt.hash('admin123', 10)
-  try {
-    await query(
-      `INSERT INTO usuarios (nombres, apellidos, correo, password_hash, rol) 
-       VALUES ('Admin', 'Prueba', 'admin', $1, 'Administrador FEUE')
-       ON CONFLICT (correo) DO UPDATE SET password_hash = $1`,
-      [hash]
-    )
-  } catch (e) {
-    console.error('Error creando admin de prueba:', e)
-  }
 }
