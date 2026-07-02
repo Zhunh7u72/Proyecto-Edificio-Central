@@ -32,9 +32,9 @@ const NAV_ITEMS = [
     ]
   },
   { href: '/admin/inscripciones', label: 'Inscripciones', icon: <IconClipboardList /> },
-  { href: '/admin/institucional', label: 'Representantes', icon: <IconUsers /> },
+  { href: '/admin/institucional', label: 'Representantes', icon: <IconUsers />, disabled: true },
   { href: '/admin/asociaciones', label: 'Asociaciones', icon: <IconHandshake />, disabled: true },
-  { href: '/admin/galerias', label: 'Galerías', icon: <IconImage /> },
+  { href: '/admin/galerias', label: 'Galerías', icon: <IconImage />, disabled: true },
   { href: '/admin/documentos', label: 'Documentos PDF', icon: <IconFile /> },
   { href: '/admin/configuracion', label: 'Configuración', icon: <IconSettings /> },
 ]
