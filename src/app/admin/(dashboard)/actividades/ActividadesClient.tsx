@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearActividad } from '@/app/actions/actividades'
 import type { Actividad } from '@/lib/types/admin'
@@ -19,6 +19,13 @@ export default function ActividadesClient({ actividades, comentariosPorActividad
   const [showModal, setShowModal] = useState(false)
   const [selectedActividad, setSelectedActividad] = useState<Actividad | null>(null)
   const [state, action, isPending] = useActionState(crearActividad, undefined)
+
+  useEffect(() => {
+    if (state?.success) {
+      setShowModal(false)
+      router.refresh()
+    }
+  }, [state?.success, router])
 
   const handleRowClick = (act: Actividad) => {
     setSelectedActividad(act)
@@ -122,7 +129,7 @@ export default function ActividadesClient({ actividades, comentariosPorActividad
             {state?.error && <div className="form-error" style={{ marginBottom: '1rem' }}>{state.error}</div>}
             {state?.success && <div className="form-success" style={{ marginBottom: '1rem' }}>{state.success}</div>}
 
-            <form action={action} encType="multipart/form-data">
+            <form action={action}>
               <div className="form-group">
                 <label className="form-label">Título</label>
                 <input type="text" name="titulo" className="form-input" required />
