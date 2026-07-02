@@ -2,14 +2,20 @@ import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase'
 import { ACTIVIDADES_SELECT, mapActividadConImagen } from '@/lib/actividad-archivos'
 import { fetchComentariosMap } from '@/lib/comentarios-query'
+import { parseTipoActividad } from '@/lib/validar-input'
 import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 
 export async function fetchActividadesByTipo(tipo: string) {
+  const tipoSeguro = parseTipoActividad(tipo)
+  if (!tipoSeguro) {
+    return { data: [] as Actividad[], error: 'Tipo de actividad inválido.' }
+  }
+
   const { data, error } = await supabaseAdmin
     .from('actividades')
     .select(ACTIVIDADES_SELECT)
-    .eq('tipo', tipo)
+    .eq('tipo', tipoSeguro)
     .order('fecha_publicacion', { ascending: false })
 
   return {

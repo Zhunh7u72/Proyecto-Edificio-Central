@@ -1,6 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
+import { parsePositiveInt, parsePositiveIntList } from '@/lib/validar-input'
 
 function mapComentarioRow(row: {
   id_comentario: number
@@ -28,10 +29,15 @@ const COMENTARIOS_SELECT =
   'id_comentario, id_actividad, contenido_texto, fecha_comentario, usuarios(nombres, apellidos), archivos_interaccion(id_archivo_inter, ruta_archivo, tipo_archivo)'
 
 export async function fetchComentariosActividad(id_actividad: number) {
+  const safeId = parsePositiveInt(id_actividad)
+  if (!safeId) {
+    return { comentarios: [], error: 'ID de actividad inválido.' }
+  }
+
   const { data, error } = await supabaseAdmin
     .from('comentarios')
     .select(COMENTARIOS_SELECT)
-    .eq('id_actividad', id_actividad)
+    .eq('id_actividad', safeId)
     .order('fecha_comentario', { ascending: true })
 
   return {
@@ -42,14 +48,15 @@ export async function fetchComentariosActividad(id_actividad: number) {
 
 export async function fetchComentariosMap(id_actividades: number[]) {
   const map: Record<number, ComentarioPublico[]> = {}
-  for (const id of id_actividades) map[id] = []
+  const safeIds = parsePositiveIntList(id_actividades)
+  for (const id of safeIds) map[id] = []
 
-  if (id_actividades.length === 0) return map
+  if (safeIds.length === 0) return map
 
   const { data } = await supabaseAdmin
     .from('comentarios')
     .select(COMENTARIOS_SELECT)
-    .in('id_actividad', id_actividades)
+    .in('id_actividad', safeIds)
     .order('fecha_comentario', { ascending: true })
 
   for (const row of data ?? []) {

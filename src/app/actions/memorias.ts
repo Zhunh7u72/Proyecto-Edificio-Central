@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-admin'
 import { TIPO_ARCHIVO_FOTO } from '@/lib/archivo-constants'
 import { validarArchivoImagen } from '@/lib/validar-contenido-archivo'
+import { parsePositiveInt, sanitizarTexto } from '@/lib/validar-input'
 import { revalidatePath } from 'next/cache'
 
 export type MemoriaState = { error?: string; success?: string } | undefined
@@ -18,10 +19,10 @@ export async function guardarMemoriaActividad(
 ): Promise<MemoriaState> {
   try {
     await requireAdmin()
-  const id_actividad = parseInt(formData.get('id_actividad') as string)
-  const resumen = (formData.get('resumen') as string)?.trim()
+    const id_actividad = parsePositiveInt(formData.get('id_actividad'))
+    const resumen = sanitizarTexto(formData.get('resumen'), 5000)
 
-  if (!id_actividad) return { error: 'Actividad inválida.' }
+    if (!id_actividad) return { error: 'Actividad inválida.' }
 
   const fotosFiles = formData.getAll('fotos_archivos') as File[]
   const validFiles = fotosFiles.filter((f) => f.size > 0)

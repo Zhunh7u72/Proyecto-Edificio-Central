@@ -2,8 +2,13 @@
 
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-admin'
-import { guardarArchivoComentario } from '@/lib/comentario-archivos'
 import { revalidatePath } from 'next/cache'
+import {
+  parsePositiveInt,
+  parseCorreo,
+  sanitizarTexto,
+  assertIdEntero,
+} from '@/lib/validar-input'
 import type { ComentarioState } from '@/lib/types/comentarios'
 
 async function findOrCreateEstudiante(nombres: string, apellidos: string, correo: string) {
@@ -32,16 +37,15 @@ export async function publicarComentario(
   _state: ComentarioState,
   formData: FormData
 ): Promise<ComentarioState> {
-  const id_actividad = parseInt(formData.get('id_actividad') as string)
-  const nombres = (formData.get('nombres') as string)?.trim()
-  const apellidos = (formData.get('apellidos') as string)?.trim()
-  const correo = (formData.get('correo') as string)?.trim()
-  const contenido_texto = (formData.get('contenido_texto') as string)?.trim()
-  const archivo = formData.get('archivo') as File | null
+  const id_actividad = parsePositiveInt(formData.get('id_actividad'))
+  const nombres = sanitizarTexto(formData.get('nombres'), 100)
+  const apellidos = sanitizarTexto(formData.get('apellidos'), 100)
+  const correo = parseCorreo(formData.get('correo'))
+  const contenido_texto = sanitizarTexto(formData.get('contenido_texto'), 2000)
 
   if (!id_actividad) return { error: 'Actividad no válida.' }
   if (!nombres || !apellidos || !correo) {
-    return { error: 'Nombre, apellidos y correo son obligatorios.' }
+    return { error: 'Nombre, apellidos y correo válidos son obligatorios.' }
   }
   if (!contenido_texto) return { error: 'Escribe un comentario antes de publicar.' }
 
@@ -71,26 +75,6 @@ export async function publicarComentario(
     return { error: 'No se pudo publicar el comentario. Intenta nuevamente.' }
   }
 
-  const hasFile = archivo && archivo.size > 0 && archivo.name
-  if (hasFile) {
-    const saved = await guardarArchivoComentario(archivo, id_actividad)
-    if ('error' in saved) {
-      await supabaseAdmin.from('comentarios').delete().eq('id_comentario', comentario.id_comentario)
-      return { error: saved.error }
-    }
-
-    const { error: archivoError } = await supabaseAdmin.from('archivos_interaccion').insert({
-      id_comentario: comentario.id_comentario,
-      ruta_archivo: saved.ruta,
-      tipo_archivo: saved.tipo,
-    })
-
-    if (archivoError) {
-      await supabaseAdmin.from('comentarios').delete().eq('id_comentario', comentario.id_comentario)
-      return { error: 'Error al guardar el archivo adjunto.' }
-    }
-  }
-
   revalidatePath(`/eventos/${id_actividad}`)
   return { success: 'Comentario publicado correctamente.' }
 }
@@ -98,24 +82,23 @@ export async function publicarComentario(
 export async function eliminarComentario(id_comentario: number): Promise<{ error?: string }> {
   try {
     await requireAdmin()
-    if (!Number.isFinite(id_comentario) || id_comentario <= 0) {
-      return { error: 'ID de comentario inválido.' }
-    }
+    const safeId = assertIdEntero(id_comentario)
+    if (!safeId) return { error: 'ID de comentario inválido.' }
 
     const { data: comentario } = await supabaseAdmin
       .from('comentarios')
       .select('id_comentario')
-      .eq('id_comentario', id_comentario)
+      .eq('id_comentario', safeId)
       .maybeSingle()
 
     if (!comentario) return { error: 'Comentario no encontrado.' }
 
-    await supabaseAdmin.from('archivos_interaccion').delete().eq('id_comentario', id_comentario)
+    await supabaseAdmin.from('archivos_interaccion').delete().eq('id_comentario', safeId)
 
     const { error } = await supabaseAdmin
       .from('comentarios')
       .delete()
-      .eq('id_comentario', id_comentario)
+      .eq('id_comentario', safeId)
 
     if (error) {
       return { error: 'Error al eliminar el comentario: ' + error.message }

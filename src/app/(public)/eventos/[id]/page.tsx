@@ -6,6 +6,7 @@ import CommentsSection from '@/components/CommentsSection'
 import ActivityImageCarousel from '@/components/ActivityImageCarousel'
 import { TIPO_ARCHIVO_FOTO, esFotoMemoria } from '@/lib/actividad-archivos'
 import { fetchComentariosActividad } from '@/lib/comentarios-query'
+import { parsePositiveInt } from '@/lib/validar-input'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,11 @@ interface EventPageProps {
 
 export default async function EventPage({ params }: EventPageProps) {
   const { id } = await params
-  const idActividad = parseInt(id)
+  const idActividad = parsePositiveInt(id)
+
+  if (!idActividad) {
+    notFound()
+  }
 
   const [{ data: actividad, error }, inscritosRes, { data: archivos }, { comentarios }] =
     await Promise.all([

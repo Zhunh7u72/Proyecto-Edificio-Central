@@ -3,64 +3,72 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
+import {
+  parseCorreo,
+  sanitizarTexto,
+  parseUrlHttp,
+  assertIdEntero,
+} from '@/lib/validar-input'
 
 export type AutoridadState = { error?: string; success?: string } | undefined
 
-// ── CREAR REPRESENTANTE ────────────────────────────────────────────────
 export async function crearAutoridad(
   state: AutoridadState,
   formData: FormData
 ): Promise<AutoridadState> {
   try {
     await requireAdmin()
-  const nombres = (formData.get('nombres') as string)?.trim()
-  const apellidos = (formData.get('apellidos') as string)?.trim()
-  const correo = (formData.get('correo_contactos') as string)?.trim()
-  const fotoUrl = (formData.get('ruta_foto') as string)?.trim() || ''
+    const nombres = sanitizarTexto(formData.get('nombres'), 100)
+    const apellidos = sanitizarTexto(formData.get('apellidos'), 100)
+    const correo = parseCorreo(formData.get('correo_contactos'))
+    const fotoRaw = sanitizarTexto(formData.get('ruta_foto'), 2048)
+    const fotoUrl = fotoRaw ? parseUrlHttp(fotoRaw) ?? '' : ''
 
-  if (!nombres || !apellidos || !correo) {
-    return { error: 'Nombres, apellidos y correo son obligatorios.' }
-  }
+    if (!nombres || !apellidos || !correo) {
+      return { error: 'Nombres, apellidos y correo válidos son obligatorios.' }
+    }
+    if (fotoRaw && !fotoUrl) {
+      return { error: 'La URL de la foto no es válida.' }
+    }
 
-  // id_info_inst: usar el primero disponible (fila única de información institucional)
-  const { data: info } = await supabaseAdmin
-    .from('informacion_institucional')
-    .select('id_info_inst')
-    .limit(1)
-    .maybeSingle()
+    const { data: info } = await supabaseAdmin
+      .from('informacion_institucional')
+      .select('id_info_inst')
+      .limit(1)
+      .maybeSingle()
 
-  if (!info) {
-    return { error: 'No existe un registro de información institucional. Crea uno primero.' }
-  }
+    if (!info) {
+      return { error: 'No existe un registro de información institucional. Crea uno primero.' }
+    }
 
-  const { error } = await supabaseAdmin.from('autoridades_info_institucional').insert({
-    nombres,
-    apellidos,
-    correo_contactos: correo,
-    ruta_foto: fotoUrl,
-    id_info_inst: info.id_info_inst,
-  })
+    const { error } = await supabaseAdmin.from('autoridades_info_institucional').insert({
+      nombres,
+      apellidos,
+      correo_contactos: correo,
+      ruta_foto: fotoUrl,
+      id_info_inst: info.id_info_inst,
+    })
 
-  if (error) return { error: 'Error al crear representante: ' + error.message }
+    if (error) return { error: 'Error al crear representante: ' + error.message }
 
-  revalidatePath('/admin/institucional')
-  revalidatePath('/institucional')
-  return { success: `Representante ${nombres} ${apellidos} creado correctamente.` }
+    revalidatePath('/admin/institucional')
+    revalidatePath('/institucional')
+    return { success: `Representante ${nombres} ${apellidos} creado correctamente.` }
   } catch {
     return { error: 'No autorizado.' }
   }
 }
 
-// ── ELIMINAR REPRESENTANTE ────────────────────────────────────────────
 export async function eliminarAutoridad(id: number): Promise<AutoridadState> {
   try {
     await requireAdmin()
-    if (!Number.isFinite(id) || id <= 0) return { error: 'ID inválido.' }
+    const safeId = assertIdEntero(id)
+    if (!safeId) return { error: 'ID inválido.' }
 
     const { error } = await supabaseAdmin
       .from('autoridades_info_institucional')
       .delete()
-      .eq('id_autoridades_info_institu', id)
+      .eq('id_autoridades_info_institu', safeId)
 
     if (error) return { error: 'Error al eliminar: ' + error.message }
 

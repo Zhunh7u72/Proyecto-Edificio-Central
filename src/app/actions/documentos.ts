@@ -1,9 +1,10 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabase'
-import { requireAdmin } from '@/lib/auth-admin'
+import { requireAdmin, parsePositiveInt } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 import { TIPO_ARCHIVO_PDF } from '@/lib/actividad-archivos'
+import { parseUrlHttp, assertIdEntero } from '@/lib/validar-input'
 import type { ActionState } from '@/lib/types/admin'
 
 function revalidate() {
@@ -17,11 +18,11 @@ export async function crearDocumento(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
-    const id_actividad = parseInt(formData.get('id_actividad') as string)
-    const ruta_archivo = (formData.get('ruta_archivo') as string)?.trim()
+    const id_actividad = parsePositiveInt(formData.get('id_actividad'))
+    const ruta_archivo = parseUrlHttp(formData.get('ruta_archivo'))
 
     if (!id_actividad) return { error: 'Selecciona una actividad.' }
-    if (!ruta_archivo) return { error: 'La URL del PDF es obligatoria.' }
+    if (!ruta_archivo) return { error: 'La URL del PDF es obligatoria y debe ser válida.' }
 
     const { error } = await supabaseAdmin.from('archivos_actividades').insert({
       id_actividad,
@@ -43,12 +44,13 @@ export async function actualizarDocumento(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
-    const id = parseInt(formData.get('id_archivo_activi') as string)
-    const id_actividad = parseInt(formData.get('id_actividad') as string)
-    const ruta_archivo = (formData.get('ruta_archivo') as string)?.trim()
+    const id = parsePositiveInt(formData.get('id_archivo_activi'))
+    const id_actividad = parsePositiveInt(formData.get('id_actividad'))
+    const ruta_archivo = parseUrlHttp(formData.get('ruta_archivo'))
 
+    if (!id) return { error: 'ID de documento inválido.' }
     if (!id_actividad) return { error: 'Selecciona una actividad.' }
-    if (!ruta_archivo) return { error: 'La URL del PDF es obligatoria.' }
+    if (!ruta_archivo) return { error: 'La URL del PDF es obligatoria y debe ser válida.' }
 
     const { error } = await supabaseAdmin
       .from('archivos_actividades')
@@ -66,10 +68,13 @@ export async function actualizarDocumento(
 export async function eliminarDocumento(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
+    const safeId = assertIdEntero(id)
+    if (!safeId) return { error: 'ID de documento inválido.' }
+
     const { error } = await supabaseAdmin
       .from('archivos_actividades')
       .delete()
-      .eq('id_archivo_activi', id)
+      .eq('id_archivo_activi', safeId)
     if (error) return { error: 'Error al eliminar: ' + error.message }
     revalidate()
     return { success: 'Documento eliminado.' }

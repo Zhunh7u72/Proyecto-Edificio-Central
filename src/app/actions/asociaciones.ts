@@ -3,6 +3,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
+import { parsePositiveInt, sanitizarTexto, assertIdEntero } from '@/lib/validar-input'
 import type { ActionState } from '@/lib/types/admin'
 
 function revalidate() {
@@ -14,7 +15,7 @@ function revalidate() {
 const TIPOS_CONTACTO = new Set(['telf', 'mail', 'whatsapp'])
 
 async function syncContactoCarrera(id_facultad_carrera: number, formData: FormData) {
-  const contacto = (formData.get('contacto') as string)?.trim() || null
+  const contacto = sanitizarTexto(formData.get('contacto'), 120)
   const tipo_contacto = (formData.get('tipo_contacto') as string)?.trim() || null
 
   await supabaseAdmin
@@ -39,8 +40,8 @@ export async function crearAsociacion(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
-    const id_facultad = parseInt(formData.get('id_facultad') as string)
-    const nombre_carrera = (formData.get('nombre_carrera') as string)?.trim()
+    const id_facultad = parsePositiveInt(formData.get('id_facultad'))
+    const nombre_carrera = sanitizarTexto(formData.get('nombre_carrera'), 150)
 
     if (!id_facultad) return { error: 'Selecciona una facultad.' }
     if (!nombre_carrera) return { error: 'El nombre de la carrera es obligatorio.' }
@@ -67,10 +68,11 @@ export async function actualizarAsociacion(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
-    const id = parseInt(formData.get('id_facultad_carrera') as string)
-    const id_facultad = parseInt(formData.get('id_facultad') as string)
-    const nombre_carrera = (formData.get('nombre_carrera') as string)?.trim()
+    const id = parsePositiveInt(formData.get('id_facultad_carrera'))
+    const id_facultad = parsePositiveInt(formData.get('id_facultad'))
+    const nombre_carrera = sanitizarTexto(formData.get('nombre_carrera'), 150)
 
+    if (!id) return { error: 'ID de asociación inválido.' }
     if (!id_facultad) return { error: 'Selecciona una facultad.' }
     if (!nombre_carrera) return { error: 'El nombre de la carrera es obligatorio.' }
 
@@ -92,14 +94,16 @@ export async function actualizarAsociacion(
 export async function eliminarAsociacion(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
+    const safeId = assertIdEntero(id)
+    if (!safeId) return { error: 'ID de asociación inválido.' }
 
-    await supabaseAdmin.from('fotos_carreras').delete().eq('id_facultad_carrera', id)
-    await supabaseAdmin.from('contactos_carreras').delete().eq('id_facultad_carrera', id)
+    await supabaseAdmin.from('fotos_carreras').delete().eq('id_facultad_carrera', safeId)
+    await supabaseAdmin.from('contactos_carreras').delete().eq('id_facultad_carrera', safeId)
 
     const { error } = await supabaseAdmin
       .from('facultades_carreras')
       .delete()
-      .eq('id_facultad_carrera', id)
+      .eq('id_facultad_carrera', safeId)
 
     if (error) return { error: 'Error al eliminar: ' + error.message }
     revalidate()
