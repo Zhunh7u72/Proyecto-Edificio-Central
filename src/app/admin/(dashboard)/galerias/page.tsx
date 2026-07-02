@@ -1,51 +1,53 @@
-import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import GaleriasClient from './GaleriasClient'
 import type { FotoCarrera } from '@/lib/types/admin'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GaleriasPage() {
-  const [{ data, error }, { data: carreras }] = await Promise.all([
-    supabase
-      .from('fotos_carreras')
-      .select('id_foto_carre, id_facultad_carrera, ruta_foto, facultades_carreras(nombre_carrera, facultades(nombre_facultad))')
-      .order('id_foto_carre', { ascending: false }),
-    supabase
-      .from('facultades_carreras')
-      .select('id_facultad_carrera, nombre_carrera, facultades(nombre_facultad)')
-      .order('nombre_carrera'),
-  ])
+  let dbError = null
+  const items: any[] = []
+  const carreraRows: any[] = []
+  try {
+    const dataRes = await query(`
+      SELECT fc.id_foto_carre, fc.id_facultad_carrera, fc.ruta_foto, facc.nombre_carrera, fac.nombre_facultad
+      FROM fotos_carreras fc
+      LEFT JOIN facultades_carreras facc ON fc.id_facultad_carrera = facc.id_facultad_carrera
+      LEFT JOIN facultades fac ON facc.id_facultad = fac.id_facultad
+      ORDER BY fc.id_foto_carre DESC
+    `)
+    for (const f of dataRes.rows) {
+      items.push({
+        id_foto_carre: f.id_foto_carre,
+        id_facultad_carrera: f.id_facultad_carrera,
+        ruta_foto: f.ruta_foto,
+        facultades_carreras: f.nombre_carrera ? { nombre_carrera: f.nombre_carrera, facultades: f.nombre_facultad ? { nombre_facultad: f.nombre_facultad } : null } : null,
+        carrera_label: f.nombre_carrera ? `${f.nombre_facultad ?? ''} — ${f.nombre_carrera}` : '',
+      })
+    }
 
-  const items = (data ?? []).map((f) => {
-    const carrera = Array.isArray(f.facultades_carreras) ? f.facultades_carreras[0] : f.facultades_carreras
-    const facRaw = carrera?.facultades
-    const fac = Array.isArray(facRaw) ? facRaw[0] : facRaw
-    return {
-      id_foto_carre: f.id_foto_carre,
-      id_facultad_carrera: f.id_facultad_carrera,
-      ruta_foto: f.ruta_foto,
-      facultades_carreras: carrera
-        ? { nombre_carrera: carrera.nombre_carrera, facultades: fac ? { nombre_facultad: fac.nombre_facultad } : null }
-        : null,
-      carrera_label: carrera
-        ? `${fac?.nombre_facultad ?? ''} — ${carrera.nombre_carrera}`
-        : '',
+    const carRes = await query(`
+      SELECT fc.id_facultad_carrera, fc.nombre_carrera, fac.nombre_facultad
+      FROM facultades_carreras fc
+      LEFT JOIN facultades fac ON fc.id_facultad = fac.id_facultad
+      ORDER BY fc.nombre_carrera
+    `)
+    for (const c of carRes.rows) {
+      carreraRows.push({
+        id_facultad_carrera: c.id_facultad_carrera,
+        nombre_carrera: c.nombre_carrera,
+        facultades: c.nombre_facultad ? { nombre_facultad: c.nombre_facultad } : null,
+      })
     }
-  })
-  const carreraRows = (carreras ?? []).map((c) => {
-    const fac = Array.isArray(c.facultades) ? c.facultades[0] : c.facultades
-    return {
-      id_facultad_carrera: c.id_facultad_carrera,
-      nombre_carrera: c.nombre_carrera,
-      facultades: fac ? { nombre_facultad: fac.nombre_facultad } : null,
-    }
-  })
+  } catch (e: any) {
+    dbError = e.message
+  }
 
   return (
     <GaleriasClient
       items={items}
       carreras={carreraRows}
-      dbError={error?.message ?? null}
+      dbError={dbError}
     />
   )
 }

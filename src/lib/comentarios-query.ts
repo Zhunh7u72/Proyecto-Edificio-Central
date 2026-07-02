@@ -1,6 +1,14 @@
 import 'server-only'
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
+
+const COMENTARIOS_SQL = `
+  SELECT c.id_comentario, c.id_actividad, c.contenido_texto, c.fecha_comentario,
+         (SELECT row_to_json(u) FROM (SELECT nombres, apellidos FROM usuarios WHERE id_usuario = c.id_usuario) u) as usuarios,
+         (SELECT json_agg(json_build_object('id_archivo_inter', ai.id_archivo_inter, 'ruta_archivo', ai.ruta_archivo, 'tipo_archivo', ai.tipo_archivo)) 
+          FROM archivos_interaccion ai WHERE ai.id_comentario = c.id_comentario) as archivos_interaccion
+  FROM comentarios c
+`
 
 function mapComentarioRow(row: {
   id_comentario: number
@@ -24,19 +32,15 @@ function mapComentarioRow(row: {
   }
 }
 
-const COMENTARIOS_SELECT =
-  'id_comentario, id_actividad, contenido_texto, fecha_comentario, usuarios(nombres, apellidos), archivos_interaccion(id_archivo_inter, ruta_archivo, tipo_archivo)'
-
 export async function fetchComentariosActividad(id_actividad: number) {
-  const { data, error } = await supabaseAdmin
-    .from('comentarios')
-    .select(COMENTARIOS_SELECT)
-    .eq('id_actividad', id_actividad)
-    .order('fecha_comentario', { ascending: true })
-
-  return {
-    comentarios: (data ?? []).map(mapComentarioRow),
-    error: error?.message ?? null,
+  try {
+    const res = await query(COMENTARIOS_SQL + ' WHERE c.id_actividad = $1 ORDER BY c.fecha_comentario ASC', [id_actividad])
+    return {
+      comentarios: (res.rows ?? []).map(mapComentarioRow),
+      error: null,
+    }
+  } catch (error: any) {
+    return { comentarios: [], error: error.message }
   }
 }
 
@@ -46,16 +50,15 @@ export async function fetchComentariosMap(id_actividades: number[]) {
 
   if (id_actividades.length === 0) return map
 
-  const { data } = await supabaseAdmin
-    .from('comentarios')
-    .select(COMENTARIOS_SELECT)
-    .in('id_actividad', id_actividades)
-    .order('fecha_comentario', { ascending: true })
-
-  for (const row of data ?? []) {
-    const id = row.id_actividad as number
-    if (!map[id]) map[id] = []
-    map[id].push(mapComentarioRow(row))
+  try {
+    const res = await query(COMENTARIOS_SQL + ' WHERE c.id_actividad = ANY($1) ORDER BY c.fecha_comentario ASC', [id_actividades])
+    for (const row of res.rows ?? []) {
+      const id = row.id_actividad as number
+      if (!map[id]) map[id] = []
+      map[id].push(mapComentarioRow(row))
+    }
+  } catch (error) {
+    console.error(error)
   }
 
   return map

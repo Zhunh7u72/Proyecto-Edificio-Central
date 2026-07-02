@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { login } from '@/app/actions/auth'
+import { login, crearAdminPrueba } from '@/app/actions/auth'
 import LoadingOverlay from '@/components/LoadingOverlay'
 import Link from 'next/link'
 import styles from './page.module.css'
@@ -14,9 +14,9 @@ export default function LoginPage() {
       <LoadingOverlay show={isPending} />
       <div className={styles.loginContainer}>
         <div className={styles.loginHeader}>
-          <img 
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKsTaAxYxsfEjB4Go6B3ucJ-17d-ayMWMsGlCGDD99R8Ocx7Jh61hAm_P&s=10" 
-            alt="Logo UTN" 
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKsTaAxYxsfEjB4Go6B3ucJ-17d-ayMWMsGlCGDD99R8Ocx7Jh61hAm_P&s=10"
+            alt="Logo UTN"
             className={styles.logo}
           />
           <h2>Portal Administrativo</h2>
@@ -32,31 +32,37 @@ export default function LoginPage() {
         <form action={action} className={styles.loginForm}>
           <div className="form-group">
             <label htmlFor="correo" className="form-label">Correo Electrónico</label>
-            <input 
-              type="email" 
-              id="correo" 
-              name="correo" 
-              className="form-input" 
+            <input
+              type="email"
+              id="correo"
+              name="correo"
+              className="form-input"
               placeholder="admin@utn.edu.ec"
               defaultValue="admin@utn.edu.ec"
-              required 
+              required
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="password" className="form-label">Contraseña</label>
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              className="form-input" 
+            <input
+              type="password"
+              id="password"
+              name="password"
+              className="form-input"
               placeholder="password"
-              required 
+              required
             />
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={isPending} style={{ width: '100%', marginTop: '1rem' }}>
             {isPending ? 'Iniciando sesión...' : 'Ingresar'}
+          </button>
+        </form>
+
+        <form action={crearAdminPrueba}>
+          <button type="submit" className="btn btn-outline" style={{ width: '100%', marginTop: '1rem', borderColor: 'orange', color: 'orange' }}>
+            [DEV] Crear Admin (admin@utn.edu.ec / admin123)
           </button>
         </form>
 

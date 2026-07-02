@@ -1,18 +1,25 @@
-import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
 export default async function InstitucionalPage() {
-  const { data: autoridades } = await supabase
-    .from('autoridades_info_institucional')
-    .select('id_autoridades_info_institu, nombres, apellidos, correo_contactos, ruta_foto')
+  const autRes = await query('SELECT id_autoridades_info_institu, nombres, apellidos, correo_contactos, ruta_foto FROM autoridades_info_institucional')
+  const autoridades = autRes.rows
 
-  const { data: facultades } = await supabase
-    .from('facultades')
-    .select(
-      'id_facultad, nombre_facultad, facultades_carreras(id_facultad_carrera, nombre_carrera, contactos_carreras(contacto, tipo_contacto))'
-    )
+  const facRes = await query(`
+    SELECT f.id_facultad, f.nombre_facultad, 
+      (SELECT json_agg(json_build_object(
+        'id_facultad_carrera', fc.id_facultad_carrera, 
+        'nombre_carrera', fc.nombre_carrera,
+        'contactos_carreras', (
+          SELECT json_agg(json_build_object('contacto', cc.contacto, 'tipo_contacto', cc.tipo_contacto))
+          FROM contactos_carreras cc WHERE cc.id_facultad_carrera = fc.id_facultad_carrera
+        )
+      )) FROM facultades_carreras fc WHERE fc.id_facultad = f.id_facultad) as facultades_carreras
+    FROM facultades f
+  `)
+  const facultades = facRes.rows
 
   return (
     <div className={styles.pageWrapper}>

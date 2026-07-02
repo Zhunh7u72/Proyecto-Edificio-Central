@@ -1,6 +1,6 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { requireAdmin, parsePositiveInt } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 import { syncImagenActividad, eliminarDependenciasActividad } from '@/lib/actividad-archivos'
@@ -47,16 +47,16 @@ export async function crearActividad(
 
     if (error || !payload) return { error: error ?? 'Datos inválidos.' }
 
-    const { data: inserted, error: dbError } = await supabaseAdmin
-      .from('actividades')
-      .insert({
-        ...payload,
-        id_usuario: session.userId,
-      })
-      .select('id_actividad')
-      .single()
-
-    if (dbError || !inserted) {
+    let inserted = null
+    try {
+      const res = await query(
+        `INSERT INTO actividades (titulo, descripcion, tipo, fecha_inicio, fecha_fin, id_usuario) 
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_actividad`,
+        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, session.userId]
+      )
+      if (res.rowCount === 0) throw new Error('sin respuesta')
+      inserted = res.rows[0]
+    } catch (dbError: any) {
       return { error: 'Error al crear: ' + (dbError?.message ?? 'sin respuesta') }
     }
 
@@ -83,12 +83,14 @@ export async function actualizarActividad(
 
     if (error || !payload) return { error: error ?? 'Datos inválidos.' }
 
-    const { error: dbError } = await supabaseAdmin
-      .from('actividades')
-      .update(payload)
-      .eq('id_actividad', id)
-
-    if (dbError) return { error: 'Error al actualizar: ' + dbError.message }
+    try {
+      await query(
+        `UPDATE actividades SET titulo = $1, descripcion = $2, tipo = $3, fecha_inicio = $4, fecha_fin = $5 WHERE id_actividad = $6`,
+        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, id]
+      )
+    } catch (dbError: any) {
+      return { error: 'Error al actualizar: ' + dbError.message }
+    }
 
     const imageResult = await syncImagenActividad(id, formData)
     if (imageResult.error) return { error: imageResult.error }
@@ -107,12 +109,11 @@ export async function eliminarActividad(id: number): Promise<ActionState> {
 
     await eliminarDependenciasActividad(id)
 
-    const { error } = await supabaseAdmin
-      .from('actividades')
-      .delete()
-      .eq('id_actividad', id)
-
-    if (error) return { error: 'Error al eliminar: ' + error.message }
+    try {
+      await query('DELETE FROM actividades WHERE id_actividad = $1', [id])
+    } catch (error: any) {
+      return { error: 'Error al eliminar: ' + error.message }
+    }
 
     revalidateActividadPaths()
     return { success: 'Registro eliminado.' }
@@ -126,12 +127,11 @@ export async function eliminarActividad(id: number): Promise<ActionState> {
 export async function toggleVisibilidadActividad(id: number, visible: boolean): Promise<ActionState> {
   try {
     await requireAdmin()
-    const { error } = await supabaseAdmin
-      .from('actividades')
-      .update({ visible })
-      .eq('id_actividad', id)
-
-    if (error) return { error: 'Error al cambiar visibilidad: ' + error.message }
+    try {
+      await query('UPDATE actividades SET visible = $1 WHERE id_actividad = $2', [visible, id])
+    } catch (error: any) {
+      return { error: 'Error al cambiar visibilidad: ' + error.message }
+    }
 
     revalidateActividadPaths()
     return { success: visible ? 'Actividad visible al público.' : 'Actividad oculta del público.' }
@@ -152,12 +152,17 @@ export async function actualizarInfoActividad(
     if (data.fecha_inicio !== undefined) payload.fecha_inicio = data.fecha_inicio || null
     if (data.fecha_fin !== undefined) payload.fecha_fin = data.fecha_fin || null
 
-    const { error } = await supabaseAdmin
-      .from('actividades')
-      .update(payload)
-      .eq('id_actividad', id)
-
-    if (error) return { error: 'Error al actualizar: ' + error.message }
+    const keys = Object.keys(payload)
+    if (keys.length > 0) {
+      const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
+      const values = keys.map(k => payload[k])
+      values.push(id)
+      try {
+        await query(`UPDATE actividades SET ${setClause} WHERE id_actividad = $${values.length}`, values)
+      } catch (error: any) {
+        return { error: 'Error al actualizar: ' + error.message }
+      }
+    }
 
     revalidateActividadPaths()
     return { success: 'Información actualizada.' }

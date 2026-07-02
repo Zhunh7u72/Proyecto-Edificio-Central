@@ -1,6 +1,7 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
+import { saveLocalFile, deleteLocalFile } from '@/lib/storage'
 import { revalidatePath } from 'next/cache'
 import {
   PDF_INSCRIPCION_MAX_BYTES,
@@ -55,13 +56,12 @@ export async function inscribirEstudiante(
     }
   }
 
-  const { data: actividad, error: actError } = await supabaseAdmin
-    .from('actividades')
-    .select('id_actividad, visible, fecha_fin, tipo')
-    .eq('id_actividad', id_actividad)
-    .single()
-
-  if (actError || !actividad) {
+  let actividad = null
+  try {
+    const resAct = await query('SELECT id_actividad, visible, fecha_fin, tipo FROM actividades WHERE id_actividad = $1', [id_actividad])
+    if (resAct.rows.length === 0) throw new Error()
+    actividad = resAct.rows[0]
+  } catch (actError) {
     return { error: 'La actividad no existe.' }
   }
 
@@ -75,44 +75,38 @@ export async function inscribirEstudiante(
 
   let userId: number
 
-  const { data: existingUser } = await supabaseAdmin
-    .from('usuarios')
-    .select('id_usuario')
-    .eq('correo', correo)
-    .maybeSingle()
+  const existingRes = await query('SELECT id_usuario FROM usuarios WHERE correo = $1', [correo])
+  const existingUser = existingRes.rows.length > 0 ? existingRes.rows[0] : null
 
   if (existingUser) {
     userId = existingUser.id_usuario
   } else {
-    const { data: newUser, error: createError } = await supabaseAdmin
-      .from('usuarios')
-      .insert({ nombres, apellidos, correo, rol: 'Estudiante' })
-      .select('id_usuario')
-      .single()
-
-    if (createError || !newUser) {
+    try {
+      const newRes = await query(
+        'INSERT INTO usuarios (nombres, apellidos, correo, rol) VALUES ($1, $2, $3, $4) RETURNING id_usuario',
+        [nombres, apellidos, correo, 'Estudiante']
+      )
+      if (newRes.rowCount === 0) throw new Error()
+      userId = newRes.rows[0].id_usuario
+    } catch (createError) {
       logErrorInterno('crear usuario', createError)
       return { error: 'No pudimos registrar tus datos. Verifica tu correo e intenta de nuevo.' }
     }
-    userId = newUser.id_usuario
   }
 
-  const { data: existing } = await supabaseAdmin
-    .from('matriculas_eventos')
-    .select('id_matricula')
-    .eq('id_usuario', userId)
-    .eq('id_actividad', id_actividad)
-    .maybeSingle()
+  const matriculaRes = await query(
+    'SELECT id_matricula FROM matriculas_eventos WHERE id_usuario = $1 AND id_actividad = $2',
+    [userId, id_actividad]
+  )
+  const existing = matriculaRes.rows.length > 0 ? matriculaRes.rows[0] : null
 
   if (existing) {
     return { error: 'Ya te encuentras inscrito en esta actividad.' }
   }
 
-  const { error: enrollError } = await supabaseAdmin
-    .from('matriculas_eventos')
-    .insert({ id_usuario: userId, id_actividad })
-
-  if (enrollError) {
+  try {
+    await query('INSERT INTO matriculas_eventos (id_usuario, id_actividad) VALUES ($1, $2)', [userId, id_actividad])
+  } catch (enrollError) {
     logErrorInterno('matrícula', enrollError)
     return { error: 'No se pudo completar la inscripción. Intenta nuevamente en unos minutos.' }
   }
@@ -121,40 +115,32 @@ export async function inscribirEstudiante(
     const extension = archivoPdf.name.split('.').pop() ?? 'pdf'
     const rutaArchivo = `actividad_${id_actividad}/usuario_${userId}_${Date.now()}.${extension}`
 
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from(BUCKET_DOCUMENTOS_INSCRIPCION)
-      .upload(rutaArchivo, archivoPdf, { contentType: 'application/pdf', upsert: false })
+    let uploadError = null
+    let localRuta = ''
+    try {
+      localRuta = await saveLocalFile(archivoPdf, `${BUCKET_DOCUMENTOS_INSCRIPCION}/${rutaArchivo}`)
+    } catch (err: any) {
+      uploadError = err
+    }
 
     if (uploadError) {
       logErrorInterno('subir PDF', uploadError)
-      await supabaseAdmin
-        .from('matriculas_eventos')
-        .delete()
-        .eq('id_usuario', userId)
-        .eq('id_actividad', id_actividad)
-
+      await query('DELETE FROM matriculas_eventos WHERE id_usuario = $1 AND id_actividad = $2', [userId, id_actividad])
       return {
         error:
           'No se pudo subir el documento. La inscripción fue cancelada. Verifica que sea un PDF válido e intenta de nuevo.',
       }
     }
 
-    const { error: archivoError } = await supabaseAdmin.from('archivos_actividades').insert({
-      id_actividad,
-      id_usuario: userId,
-      ruta_archivo: rutaArchivo,
-      tipo_archivo: TIPO_ARCHIVO_PDF,
-    })
-
-    if (archivoError) {
+    try {
+      await query(
+        'INSERT INTO archivos_actividades (id_actividad, id_usuario, ruta_archivo, tipo_archivo) VALUES ($1, $2, $3, $4)',
+        [id_actividad, userId, localRuta, TIPO_ARCHIVO_PDF]
+      )
+    } catch (archivoError) {
       logErrorInterno('registrar PDF en BD', archivoError)
-      await supabaseAdmin.storage.from(BUCKET_DOCUMENTOS_INSCRIPCION).remove([rutaArchivo])
-      await supabaseAdmin
-        .from('matriculas_eventos')
-        .delete()
-        .eq('id_usuario', userId)
-        .eq('id_actividad', id_actividad)
-
+      await deleteLocalFile(`${BUCKET_DOCUMENTOS_INSCRIPCION}/${rutaArchivo}`)
+      await query('DELETE FROM matriculas_eventos WHERE id_usuario = $1 AND id_actividad = $2', [userId, id_actividad])
       return {
         error:
           'No se pudo completar la inscripción con el documento adjunto. Intenta nuevamente o contacta a la FEUE.',

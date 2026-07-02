@@ -192,7 +192,7 @@ export default function ActividadCrud({
             {state?.error && <div className="form-error" style={{ marginBottom: '1rem' }}>{state.error}</div>}
             {state?.success && <div className="form-success" style={{ marginBottom: '1rem' }}>{state.success}</div>}
 
-            <form action={action}>
+            <form action={action} encType="multipart/form-data">
               <input type="hidden" name="tipo" value={tipo} />
               {editing && <input type="hidden" name="id_actividad" value={editing.id_actividad} />}
 
@@ -219,12 +219,12 @@ export default function ActividadCrud({
                 </div>
 
                 <div className={`form-group ${styles.formGridFull}`}>
-                  <label className="form-label">Imágenes</label>
+                  <label className="form-label">Foto / Imágenes</label>
                   <input
                     type="file"
                     name="archivos"
                     className="form-input"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp"
                     multiple
                   />
                   <small className={styles.fileHint}>Puedes subir varias fotos (max 5MB c/u)</small>

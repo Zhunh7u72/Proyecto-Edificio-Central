@@ -1,4 +1,4 @@
-import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import HistorialClient from './HistorialClient'
 import styles from './page.module.css'
 
@@ -7,11 +7,13 @@ export const dynamic = 'force-dynamic'
 export default async function HistorialPage() {
   const hoy = new Date().toISOString()
 
-  const { data: actividades } = await supabase
-    .from('actividades')
-    .select('id_actividad, titulo, descripcion, tipo, fecha_publicacion, fecha_inicio, fecha_fin')
-    .or(`fecha_fin.lt.${hoy},and(fecha_fin.is.null,fecha_publicacion.lt.${hoy})`)
-    .order('fecha_inicio', { ascending: false })
+  const res = await query(`
+    SELECT id_actividad, titulo, descripcion, tipo, fecha_publicacion, fecha_inicio, fecha_fin
+    FROM actividades
+    WHERE fecha_fin < $1 OR (fecha_fin IS NULL AND fecha_publicacion < $1)
+    ORDER BY fecha_inicio DESC
+  `, [hoy])
+  const actividades = res.rows
 
   return (
     <div className={styles.pageWrapper}>

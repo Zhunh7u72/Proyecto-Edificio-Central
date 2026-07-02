@@ -1,20 +1,26 @@
 import 'server-only'
-import { supabaseAdmin } from '@/lib/supabase'
-import { ACTIVIDADES_SELECT, mapActividadConImagen } from '@/lib/actividad-archivos'
+import { query } from '@/lib/db'
+import { mapActividadConImagen } from '@/lib/actividad-archivos'
 import { fetchComentariosMap } from '@/lib/comentarios-query'
 import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 
-export async function fetchActividadesByTipo(tipo: string) {
-  const { data, error } = await supabaseAdmin
-    .from('actividades')
-    .select(ACTIVIDADES_SELECT)
-    .eq('tipo', tipo)
-    .order('fecha_publicacion', { ascending: false })
+const ACTIVIDADES_SQL = `
+  SELECT a.id_actividad, a.id_usuario, a.titulo, a.descripcion, a.tipo, a.fecha_publicacion, a.fecha_inicio, a.fecha_fin, a.visible,
+         (SELECT json_agg(json_build_object('id_archivo_activi', aa.id_archivo_activi, 'ruta_archivo', aa.ruta_archivo, 'tipo_archivo', aa.tipo_archivo)) 
+          FROM archivos_actividades aa WHERE aa.id_actividad = a.id_actividad) as archivos_actividades
+  FROM actividades a
+`
 
-  return {
-    data: (data ?? []).map(mapActividadConImagen) as Actividad[],
-    error: error?.message ?? null,
+export async function fetchActividadesByTipo(tipo: string) {
+  try {
+    const res = await query(ACTIVIDADES_SQL + ' WHERE a.tipo = $1 ORDER BY a.fecha_publicacion DESC', [tipo])
+    return {
+      data: res.rows.map(mapActividadConImagen) as Actividad[],
+      error: null,
+    }
+  } catch (error: any) {
+    return { data: [], error: error.message }
   }
 }
 
@@ -35,27 +41,25 @@ export type ActividadesConComentarios = {
 }
 
 export async function fetchAllActividades() {
-  const { data, error } = await supabaseAdmin
-    .from('actividades')
-    .select(ACTIVIDADES_SELECT)
-    .order('fecha_publicacion', { ascending: false })
-
-  return {
-    data: (data ?? []).map(mapActividadConImagen) as Actividad[],
-    error: error?.message ?? null,
+  try {
+    const res = await query(ACTIVIDADES_SQL + ' ORDER BY a.fecha_publicacion DESC')
+    return {
+      data: res.rows.map(mapActividadConImagen) as Actividad[],
+      error: null,
+    }
+  } catch (error: any) {
+    return { data: [], error: error.message }
   }
 }
 
 export async function fetchActividadesPublicas(limit = 9) {
-  const { data, error } = await supabaseAdmin
-    .from('actividades')
-    .select(ACTIVIDADES_SELECT)
-    .eq('visible', true)
-    .order('fecha_publicacion', { ascending: false })
-    .limit(limit)
-
-  return {
-    data: (data ?? []).map(mapActividadConImagen) as Actividad[],
-    error,
+  try {
+    const res = await query(ACTIVIDADES_SQL + ' WHERE a.visible = true ORDER BY a.fecha_publicacion DESC LIMIT $1', [limit])
+    return {
+      data: res.rows.map(mapActividadConImagen) as Actividad[],
+      error: null,
+    }
+  } catch (error: any) {
+    return { data: [], error: error.message }
   }
 }

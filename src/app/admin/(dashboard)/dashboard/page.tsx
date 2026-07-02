@@ -1,4 +1,4 @@
-import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { TIPO_ARCHIVO_PDF } from '@/lib/actividad-archivos'
 import Link from 'next/link'
 import styles from '@/components/admin/admin.module.css'
@@ -7,31 +7,18 @@ export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const [
-    { count: actCount },
-    { count: inscritosCount },
-    { count: usersCount },
-    { count: anunciosCount },
-    { count: eventosCount },
-    { count: capacitacionesCount },
-    { count: fotosCount },
-    { count: pdfsCount },
-    { count: facultadesCount },
-    { count: comentariosCount },
+    actCount, inscritosCount, usersCount, anunciosCount, eventosCount, capacitacionesCount, fotosCount, pdfsCount, facultadesCount, comentariosCount
   ] = await Promise.all([
-    supabase.from('actividades').select('id_actividad', { count: 'exact', head: true }),
-    supabase.from('matriculas_eventos').select('id_matricula', { count: 'exact', head: true }),
-    supabase.from('usuarios').select('id_usuario', { count: 'exact', head: true }).eq('rol', 'Estudiante'),
-    supabase.from('actividades').select('id_actividad', { count: 'exact', head: true }).eq('tipo', 'Anuncio'),
-    supabase.from('actividades').select('id_actividad', { count: 'exact', head: true }).eq('tipo', 'Evento'),
-    supabase.from('actividades').select('id_actividad', { count: 'exact', head: true }).eq('tipo', 'Capacitacion'),
-    supabase.from('fotos_carreras').select('id_foto_carre', { count: 'exact', head: true }),
-    supabase
-      .from('archivos_actividades')
-      .select('id_archivo_activi', { count: 'exact', head: true })
-      .eq('tipo_archivo', TIPO_ARCHIVO_PDF)
-      .is('id_usuario', null),
-    supabase.from('facultades').select('id_facultad', { count: 'exact', head: true }),
-    supabase.from('comentarios').select('id_comentario', { count: 'exact', head: true }),
+    query('SELECT count(*) FROM actividades').then(res => parseInt(res.rows[0].count)),
+    query('SELECT count(*) FROM matriculas_eventos').then(res => parseInt(res.rows[0].count)),
+    query("SELECT count(*) FROM usuarios WHERE rol = 'Estudiante'").then(res => parseInt(res.rows[0].count)),
+    query("SELECT count(*) FROM actividades WHERE tipo = 'Anuncio'").then(res => parseInt(res.rows[0].count)),
+    query("SELECT count(*) FROM actividades WHERE tipo = 'Evento'").then(res => parseInt(res.rows[0].count)),
+    query("SELECT count(*) FROM actividades WHERE tipo = 'Capacitacion'").then(res => parseInt(res.rows[0].count)),
+    query('SELECT count(*) FROM fotos_carreras').then(res => parseInt(res.rows[0].count)),
+    query(`SELECT count(*) FROM archivos_actividades WHERE tipo_archivo = $1 AND id_usuario IS NULL`, [TIPO_ARCHIVO_PDF]).then(res => parseInt(res.rows[0].count)),
+    query('SELECT count(*) FROM facultades').then(res => parseInt(res.rows[0].count)),
+    query('SELECT count(*) FROM comentarios').then(res => parseInt(res.rows[0].count)),
   ])
 
   const stats = [

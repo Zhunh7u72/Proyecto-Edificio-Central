@@ -1,14 +1,11 @@
-import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import ConfiguracionClient from './ConfiguracionClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ConfiguracionPage() {
-  const { data: config } = await supabase
-    .from('informacion_institucional')
-    .select('id_info_inst, logo_url, carrusel_urls, mision, vision')
-    .limit(1)
-    .single()
+  const res = await query('SELECT id_info_inst, logo_url, carrusel_urls, mision, vision FROM informacion_institucional LIMIT 1')
+  const config = res.rows.length > 0 ? res.rows[0] : null
 
   return (
     <div>

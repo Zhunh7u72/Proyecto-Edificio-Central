@@ -1,5 +1,5 @@
 import 'server-only'
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
 
 export type InscripcionAdmin = {
@@ -44,15 +44,16 @@ async function fetchPdfMap(
   const actIds = Array.from(new Set(pairs.map((p) => p.id_actividad)))
   const userIds = Array.from(new Set(pairs.map((p) => p.id_usuario)))
 
-  const { data: archivos } = await supabaseAdmin
-    .from('archivos_actividades')
-    .select('id_actividad, id_usuario, ruta_archivo')
-    .in('id_actividad', actIds)
-    .in('id_usuario', userIds)
-    .eq('tipo_archivo', TIPO_ARCHIVO_PDF)
-
-  for (const archivo of archivos ?? []) {
-    map.set(`${archivo.id_actividad}:${archivo.id_usuario}`, archivo.ruta_archivo)
+  try {
+    const res = await query(
+      'SELECT id_actividad, id_usuario, ruta_archivo FROM archivos_actividades WHERE id_actividad = ANY($1) AND id_usuario = ANY($2) AND tipo_archivo = $3',
+      [actIds, userIds, TIPO_ARCHIVO_PDF]
+    )
+    for (const archivo of res.rows ?? []) {
+      map.set(`${archivo.id_actividad}:${archivo.id_usuario}`, archivo.ruta_archivo)
+    }
+  } catch (error) {
+    console.error(error)
   }
 
   return map
@@ -83,15 +84,22 @@ function mapInscripcionRows(
   })
 }
 
-export async function fetchInscripciones() {
-  const { data, error } = await supabaseAdmin
-    .from('matriculas_eventos')
-    .select(
-      'id_matricula, id_actividad, fecha_registro, usuarios(id_usuario, nombres, apellidos, correo), actividades(id_actividad, titulo, tipo)'
-    )
-    .order('fecha_registro', { ascending: false })
+const INSCRIPCIONES_SQL = `
+  SELECT m.id_matricula, m.id_actividad, m.fecha_registro,
+         (SELECT row_to_json(u) FROM (SELECT id_usuario, nombres, apellidos, correo FROM usuarios WHERE id_usuario = m.id_usuario) u) as usuarios,
+         (SELECT row_to_json(a) FROM (SELECT id_actividad, titulo, tipo FROM actividades WHERE id_actividad = m.id_actividad) a) as actividades
+  FROM matriculas_eventos m
+`
 
-  const rows = data ?? []
+export async function fetchInscripciones() {
+  let rows: InscripcionRow[] = []
+  let errorMsg = null
+  try {
+    const res = await query(INSCRIPCIONES_SQL + ' ORDER BY m.fecha_registro DESC')
+    rows = res.rows ?? []
+  } catch (error: any) {
+    errorMsg = error.message
+  }
   const pairs = rows
     .map((row) => {
       const usuario = unwrapUsuario(row.usuarios)
@@ -105,17 +113,18 @@ export async function fetchInscripciones() {
   const pdfMap = await fetchPdfMap(pairs)
   const inscripciones = mapInscripcionRows(rows, pdfMap)
 
-  return { inscripciones, error: error?.message ?? null }
+  return { inscripciones, error: errorMsg }
 }
 
 export async function fetchInscripcionesByActividad(id_actividad: number) {
-  const { data, error } = await supabaseAdmin
-    .from('matriculas_eventos')
-    .select('id_matricula, fecha_registro, usuarios(id_usuario, nombres, apellidos, correo)')
-    .eq('id_actividad', id_actividad)
-    .order('fecha_registro', { ascending: false })
-
-  const rows = data ?? []
+  let rows: InscripcionRow[] = []
+  let errorMsg = null
+  try {
+    const res = await query(INSCRIPCIONES_SQL + ' WHERE m.id_actividad = $1 ORDER BY m.fecha_registro DESC', [id_actividad])
+    rows = res.rows ?? []
+  } catch (error: any) {
+    errorMsg = error.message
+  }
   const pairs = rows
     .map((row) => {
       const usuario = unwrapUsuario(row.usuarios)
@@ -127,7 +136,7 @@ export async function fetchInscripcionesByActividad(id_actividad: number) {
   const pdfMap = await fetchPdfMap(pairs)
   const inscripciones = mapInscripcionRows(rows, pdfMap, id_actividad)
 
-  return { inscripciones, error: error?.message ?? null }
+  return { inscripciones, error: errorMsg }
 }
 
 export async function fetchInscripcionesMap(id_actividades: number[]) {
@@ -136,15 +145,13 @@ export async function fetchInscripcionesMap(id_actividades: number[]) {
 
   if (id_actividades.length === 0) return map
 
-  const { data } = await supabaseAdmin
-    .from('matriculas_eventos')
-    .select(
-      'id_matricula, id_actividad, fecha_registro, usuarios(id_usuario, nombres, apellidos, correo)'
-    )
-    .in('id_actividad', id_actividades)
-    .order('fecha_registro', { ascending: false })
-
-  const rows = data ?? []
+  let rows: InscripcionRow[] = []
+  try {
+    const res = await query(INSCRIPCIONES_SQL + ' WHERE m.id_actividad = ANY($1) ORDER BY m.fecha_registro DESC', [id_actividades])
+    rows = res.rows ?? []
+  } catch (error) {
+    console.error(error)
+  }
   if (rows.length === 0) return map
 
   const pairs = rows

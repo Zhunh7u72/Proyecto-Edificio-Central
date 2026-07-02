@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
 import { getSession } from '@/lib/session'
-import { BUCKET_DOCUMENTOS_INSCRIPCION } from '@/lib/config'
+import fs from 'fs/promises'
+import path from 'path'
 
 export async function GET(request: NextRequest) {
   // Verificar que el solicitante es administrador
@@ -17,32 +17,30 @@ export async function GET(request: NextRequest) {
     return new NextResponse('Ruta de archivo inválida', { status: 400 })
   }
 
-  if (!/^actividad_\d+\/usuario_\d+_\d+\.[a-z0-9]+$/i.test(ruta)) {
-    return new NextResponse('Ruta de archivo no permitida', { status: 400 })
+  let filePath = ruta
+  if (filePath.startsWith('/uploads/')) {
+    filePath = filePath.replace('/uploads/', '')
   }
 
-  // Descargar el archivo del bucket privado con privilegios administrativos
-  const { data, error } = await supabaseAdmin.storage
-    .from(BUCKET_DOCUMENTOS_INSCRIPCION)
-    .download(ruta)
+  const fullPath = path.join(process.cwd(), 'public', 'uploads', filePath)
 
-  if (error || !data) {
-    console.error('Error descargando PDF:', error?.message)
+  try {
+    const buffer = await fs.readFile(fullPath)
+    const filename = filePath.split('/').pop() ?? 'documento.pdf'
+    const descargar = url.searchParams.get('descargar') === '1'
+    const disposition = descargar
+      ? `attachment; filename="${filename}"`
+      : `inline; filename="${filename}"`
+
+    return new NextResponse(buffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': disposition,
+      },
+    })
+  } catch (error) {
+    console.error('Error descargando PDF:', error)
     return new NextResponse('Archivo no encontrado', { status: 404 })
   }
-
-  const filename = ruta.split('/').pop() ?? 'documento.pdf'
-  const buffer = await data.arrayBuffer()
-  const descargar = url.searchParams.get('descargar') === '1'
-  const disposition = descargar
-    ? `attachment; filename="${filename}"`
-    : `inline; filename="${filename}"`
-
-  return new NextResponse(buffer, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': disposition,
-    },
-  })
 }

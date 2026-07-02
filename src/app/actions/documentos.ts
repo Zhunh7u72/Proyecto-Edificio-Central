@@ -1,6 +1,6 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 import { TIPO_ARCHIVO_PDF } from '@/lib/actividad-archivos'
@@ -23,13 +23,14 @@ export async function crearDocumento(
     if (!id_actividad) return { error: 'Selecciona una actividad.' }
     if (!ruta_archivo) return { error: 'La URL del PDF es obligatoria.' }
 
-    const { error } = await supabaseAdmin.from('archivos_actividades').insert({
-      id_actividad,
-      ruta_archivo,
-      tipo_archivo: TIPO_ARCHIVO_PDF,
-    })
-
-    if (error) return { error: 'Error al crear: ' + error.message }
+    try {
+      await query(
+        'INSERT INTO archivos_actividades (id_actividad, ruta_archivo, tipo_archivo) VALUES ($1, $2, $3)',
+        [id_actividad, ruta_archivo, TIPO_ARCHIVO_PDF]
+      )
+    } catch (error: any) {
+      return { error: 'Error al crear: ' + error.message }
+    }
     revalidate()
     return { success: 'Documento PDF creado exitosamente.' }
   } catch {
@@ -50,12 +51,14 @@ export async function actualizarDocumento(
     if (!id_actividad) return { error: 'Selecciona una actividad.' }
     if (!ruta_archivo) return { error: 'La URL del PDF es obligatoria.' }
 
-    const { error } = await supabaseAdmin
-      .from('archivos_actividades')
-      .update({ id_actividad, ruta_archivo, tipo_archivo: TIPO_ARCHIVO_PDF })
-      .eq('id_archivo_activi', id)
-
-    if (error) return { error: 'Error al actualizar: ' + error.message }
+    try {
+      await query(
+        'UPDATE archivos_actividades SET id_actividad = $1, ruta_archivo = $2, tipo_archivo = $3 WHERE id_archivo_activi = $4',
+        [id_actividad, ruta_archivo, TIPO_ARCHIVO_PDF, id]
+      )
+    } catch (error: any) {
+      return { error: 'Error al actualizar: ' + error.message }
+    }
     revalidate()
     return { success: 'Documento actualizado.' }
   } catch {
@@ -66,11 +69,11 @@ export async function actualizarDocumento(
 export async function eliminarDocumento(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
-    const { error } = await supabaseAdmin
-      .from('archivos_actividades')
-      .delete()
-      .eq('id_archivo_activi', id)
-    if (error) return { error: 'Error al eliminar: ' + error.message }
+    try {
+      await query('DELETE FROM archivos_actividades WHERE id_archivo_activi = $1', [id])
+    } catch (error: any) {
+      return { error: 'Error al eliminar: ' + error.message }
+    }
     revalidate()
     return { success: 'Documento eliminado.' }
   } catch {

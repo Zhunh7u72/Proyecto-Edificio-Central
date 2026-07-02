@@ -1,5 +1,6 @@
 import 'server-only'
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
+import { saveLocalFile } from '@/lib/storage'
 import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
 
 export { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
@@ -50,18 +51,15 @@ export async function guardarArchivoActividad(file: File, id_actividad: number):
   const safeName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
   const storagePath = `actividades/${id_actividad}/${safeName}`
 
-  const { error: uploadError } = await supabaseAdmin.storage
-    .from('archivos_publicos')
-    .upload(storagePath, file, { contentType: file.type })
-
-  if (uploadError) {
+  let localRuta = ''
+  try {
+    localRuta = await saveLocalFile(file, storagePath)
+  } catch (uploadError: any) {
     return { error: 'Error al subir la imagen: ' + uploadError.message }
   }
 
-  const { data } = supabaseAdmin.storage.from('archivos_publicos').getPublicUrl(storagePath)
-
   return {
-    ruta: data.publicUrl,
+    ruta: localRuta,
     tipo: TIPO_ARCHIVO_FOTO,
   }
 }
@@ -75,68 +73,61 @@ export async function syncImagenActividad(
 
   if (archivosValidos.length === 0) return {}
 
-  const { error: deleteError } = await supabaseAdmin
-    .from('archivos_actividades')
-    .delete()
-    .eq('id_actividad', id_actividad)
-    .eq('tipo_archivo', TIPO_ARCHIVO_FOTO)
-
-  if (deleteError) return { error: 'Error al limpiar imágenes anteriores: ' + deleteError.message }
+  try {
+    await query('DELETE FROM archivos_actividades WHERE id_actividad = $1 AND tipo_archivo = $2', [id_actividad, TIPO_ARCHIVO_FOTO])
+  } catch (deleteError: any) {
+    return { error: 'Error al limpiar imágenes anteriores: ' + deleteError.message }
+  }
 
   for (const archivo of archivosValidos) {
     const saved = await guardarArchivoActividad(archivo, id_actividad)
     if ('error' in saved) return { error: saved.error }
 
-    const { error: insertError } = await supabaseAdmin.from('archivos_actividades').insert({
-      id_actividad,
-      ruta_archivo: saved.ruta,
-      tipo_archivo: saved.tipo,
-    })
-
-    if (insertError) return { error: 'Error al guardar referencia de imagen: ' + insertError.message }
+    try {
+      await query(
+        'INSERT INTO archivos_actividades (id_actividad, ruta_archivo, tipo_archivo) VALUES ($1, $2, $3)',
+        [id_actividad, saved.ruta, saved.tipo]
+      )
+    } catch (insertError: any) {
+      return { error: 'Error al guardar referencia de imagen: ' + insertError.message }
+    }
   }
 
   return {}
 }
 
 export async function eliminarArchivosActividad(id_actividad: number) {
-  await supabaseAdmin
-    .from('archivos_actividades')
-    .delete()
-    .eq('id_actividad', id_actividad)
+  try {
+    await query('DELETE FROM archivos_actividades WHERE id_actividad = $1', [id_actividad])
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 /** Elimina inscripciones, comentarios y archivos antes de borrar la actividad. */
 export async function eliminarDependenciasActividad(id_actividad: number) {
-  const { data: comentarios } = await supabaseAdmin
-    .from('comentarios')
-    .select('id_comentario')
-    .eq('id_actividad', id_actividad)
-
-  const idsComentarios = (comentarios ?? []).map((c) => c.id_comentario)
+  const resCom = await query('SELECT id_comentario FROM comentarios WHERE id_actividad = $1', [id_actividad])
+  const idsComentarios = resCom.rows.map(c => c.id_comentario)
 
   if (idsComentarios.length > 0) {
-    const { error: archivosError } = await supabaseAdmin
-      .from('archivos_interaccion')
-      .delete()
-      .in('id_comentario', idsComentarios)
-
-    if (archivosError) throw new Error(archivosError.message)
+    try {
+      await query('DELETE FROM archivos_interaccion WHERE id_comentario = ANY($1)', [idsComentarios])
+    } catch (archivosError: any) {
+      throw new Error(archivosError.message)
+    }
   }
 
-  const { error: comentariosError } = await supabaseAdmin
-    .from('comentarios')
-    .delete()
-    .eq('id_actividad', id_actividad)
+  try {
+    await query('DELETE FROM comentarios WHERE id_actividad = $1', [id_actividad])
+  } catch (comentariosError: any) {
+    throw new Error(comentariosError.message)
+  }
 
-  if (comentariosError) throw new Error(comentariosError.message)
-
-  const { error: inscripcionesError } = await supabaseAdmin
-    .from('matriculas_eventos')
-    .delete()
-    .eq('id_actividad', id_actividad)
-
-  if (inscripcionesError) throw new Error(inscripcionesError.message)
+  try {
+    await query('DELETE FROM matriculas_eventos WHERE id_actividad = $1', [id_actividad])
+  } catch (inscripcionesError: any) {
+    throw new Error(inscripcionesError.message)
+  }
 
   await eliminarArchivosActividad(id_actividad)
 }

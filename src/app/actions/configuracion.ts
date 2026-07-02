@@ -1,6 +1,7 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
+import { saveLocalFile } from '@/lib/storage'
 import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 
@@ -22,12 +23,8 @@ export async function actualizarConfiguracionSitio(formData: FormData): Promise<
       return { error: 'Datos del carrusel inválidos.' }
     }
 
-    const { data: config } = await supabaseAdmin
-      .from('informacion_institucional')
-      .select('id_info_inst, logo_url, carrusel_urls')
-      .limit(1)
-      .maybeSingle()
-      
+    const infoRes = await query('SELECT id_info_inst, logo_url, carrusel_urls FROM informacion_institucional LIMIT 1')
+    const config = infoRes.rows.length > 0 ? infoRes.rows[0] : null
     let newLogoUrl = config?.logo_url || null
     
     // Upload Logo
@@ -35,13 +32,10 @@ export async function actualizarConfiguracionSitio(formData: FormData): Promise<
       const extension = logoFile.name.split('.').pop()
       const safeName = `logo-${Date.now()}.${extension}`
       
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from('archivos_publicos')
-        .upload(`config/${safeName}`, logoFile, { contentType: logoFile.type })
-        
-      if (!uploadError) {
-        const { data } = supabaseAdmin.storage.from('archivos_publicos').getPublicUrl(`config/${safeName}`)
-        newLogoUrl = data.publicUrl
+      try {
+        newLogoUrl = await saveLocalFile(logoFile, `config/${safeName}`)
+      } catch (uploadError) {
+        console.error(uploadError)
       }
     }
     
@@ -53,13 +47,11 @@ export async function actualizarConfiguracionSitio(formData: FormData): Promise<
       const extension = file.name.split('.').pop()
       const safeName = `carrusel-${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
       
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from('archivos_publicos')
-        .upload(`config/carrusel/${safeName}`, file, { contentType: file.type })
-        
-      if (!uploadError) {
-        const { data } = supabaseAdmin.storage.from('archivos_publicos').getPublicUrl(`config/carrusel/${safeName}`)
-        newCarruselUrls.push(data.publicUrl)
+      try {
+        const localRuta = await saveLocalFile(file, `config/carrusel/${safeName}`)
+        newCarruselUrls.push(localRuta)
+      } catch (uploadError) {
+        console.error(uploadError)
       }
     }
     
@@ -67,24 +59,23 @@ export async function actualizarConfiguracionSitio(formData: FormData): Promise<
     let updateError = null
     
     if (config) {
-      const { error } = await supabaseAdmin
-        .from('informacion_institucional')
-        .update({
-          logo_url: newLogoUrl,
-          carrusel_urls: newCarruselUrls
-        })
-        .eq('id_info_inst', config.id_info_inst)
-      updateError = error
+      try {
+        await query(
+          'UPDATE informacion_institucional SET logo_url = $1, carrusel_urls = $2 WHERE id_info_inst = $3',
+          [newLogoUrl, JSON.stringify(newCarruselUrls), config.id_info_inst]
+        )
+      } catch (e: any) {
+        updateError = e
+      }
     } else {
-      const { error } = await supabaseAdmin
-        .from('informacion_institucional')
-        .insert({
-          logo_url: newLogoUrl,
-          carrusel_urls: newCarruselUrls,
-          mision: '',
-          vision: ''
-        })
-      updateError = error
+      try {
+        await query(
+          'INSERT INTO informacion_institucional (logo_url, carrusel_urls, mision, vision) VALUES ($1, $2, $3, $4)',
+          [newLogoUrl, JSON.stringify(newCarruselUrls), '', '']
+        )
+      } catch (e: any) {
+        updateError = e
+      }
     }
       
     if (updateError) {

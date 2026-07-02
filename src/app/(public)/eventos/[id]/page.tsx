@@ -1,4 +1,4 @@
-import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import EnrollForm from '@/components/EnrollForm'
@@ -12,30 +12,29 @@ interface EventPageProps {
 
 export default async function EventPage({ params }: EventPageProps) {
   const { id } = await params
-  
-  // Obtener actividad
-  const { data: actividad, error } = await supabase
-    .from('actividades')
-    .select('*, usuarios(nombres, apellidos)')
-    .eq('id_actividad', parseInt(id))
-    .single()
 
-  if (error || !actividad) {
+  // Obtener actividad
+  const res = await query(`
+    SELECT a.*, 
+           (SELECT row_to_json(u) FROM (SELECT nombres, apellidos FROM usuarios WHERE id_usuario = a.id_usuario) u) as usuarios
+    FROM actividades a
+    WHERE a.id_actividad = $1
+  `, [parseInt(id)])
+  const actividad = res.rows[0]
+
+  if (!actividad) {
     notFound()
   }
 
-  // Obtener inscritos (solo cuenta)
-  const { count: inscritosCount } = await supabase
-    .from('matriculas_eventos')
-    .select('*', { count: 'exact', head: true })
-    .eq('id_actividad', actividad.id_actividad)
+  const countRes = await query('SELECT count(*) FROM matriculas_eventos WHERE id_actividad = $1', [actividad.id_actividad])
+  const inscritosCount = parseInt(countRes.rows[0].count)
 
   const fechaPub = new Date(actividad.fecha_publicacion).toLocaleDateString('es-EC', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   })
-  
+
   const esInscripcionAbierta = actividad.fecha_fin && new Date() <= new Date(actividad.fecha_fin)
-  
+
   return (
     <div className={styles.pageWrapper}>
       {/* HEADER DE LA ACTIVIDAD */}
@@ -64,7 +63,7 @@ export default async function EventPage({ params }: EventPageProps) {
               )}
             </div>
           </div>
-          
+
           {/* Aquí iría la sección de Comentarios y Archivos según el diseño */}
           <div className={styles.contentBox} style={{ marginTop: '2rem' }}>
             <h3 className={styles.sectionTitle}>Material y Comentarios</h3>
@@ -85,7 +84,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   <strong>Cierre de inscripción:</strong><br />
                   <span className={esInscripcionAbierta ? styles.openText : styles.closedText}>
                     {new Date(actividad.fecha_fin).toLocaleDateString('es-EC', {
-                      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute:'2-digit'
+                      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
                     })}
                   </span>
                 </li>

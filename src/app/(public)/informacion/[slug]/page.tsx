@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import InfoPageLayout from '@/components/InfoPageLayout'
-import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import {
   INFORMACION_SECTIONS,
   PRINCIPIOS_CONTENT,
@@ -31,18 +31,14 @@ async function getPageContent(slug: string) {
       return renderParagraphs(FINES_CONTENT)
     case 'mision':
     case 'vision': {
-      const { data } = await supabase
-        .from('informacion_institucional')
-        .select('mision, vision')
-        .limit(1)
-        .maybeSingle()
+      const res = await query('SELECT mision, vision FROM informacion_institucional LIMIT 1')
+      const data = res.rows.length > 0 ? res.rows[0] : null
       const text = slug === 'mision' ? data?.mision : data?.vision
       return <p>{text || 'Información no disponible.'}</p>
     }
     case 'autoridades': {
-      const { data: autoridades } = await supabase
-        .from('autoridades_info_institucional')
-        .select('id_autoridades_info_institu, nombres, apellidos, correo_contactos, ruta_foto')
+      const resAut = await query('SELECT id_autoridades_info_institu, nombres, apellidos, correo_contactos, ruta_foto FROM autoridades_info_institucional')
+      const autoridades = resAut.rows
 
       if (!autoridades || autoridades.length === 0) {
         return <p>Información no disponible.</p>

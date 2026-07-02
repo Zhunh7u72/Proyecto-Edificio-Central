@@ -1,5 +1,5 @@
 import 'server-only'
-import { supabaseAdmin } from '@/lib/supabase'
+import { saveLocalFile } from '@/lib/storage'
 import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -30,18 +30,15 @@ export async function guardarArchivoComentario(
   const safeName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
   const storagePath = `comentarios/${id_actividad}/${safeName}`
 
-  const { error: uploadError } = await supabaseAdmin.storage
-    .from('archivos_publicos')
-    .upload(storagePath, file, { contentType: file.type })
-
-  if (uploadError) {
+  let localRuta = ''
+  try {
+    localRuta = await saveLocalFile(file, storagePath)
+  } catch (uploadError: any) {
     return { error: 'Error al subir el archivo: ' + uploadError.message }
   }
 
-  const { data } = supabaseAdmin.storage.from('archivos_publicos').getPublicUrl(storagePath)
-
   return {
-    ruta: data.publicUrl,
+    ruta: localRuta,
     tipo,
   }
 }

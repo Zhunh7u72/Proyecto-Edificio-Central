@@ -1,6 +1,6 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 
@@ -22,26 +22,20 @@ export async function crearAutoridad(
     return { error: 'Nombres, apellidos y correo son obligatorios.' }
   }
 
-  // id_info_inst: usar el primero disponible (fila única de información institucional)
-  const { data: info } = await supabaseAdmin
-    .from('informacion_institucional')
-    .select('id_info_inst')
-    .limit(1)
-    .maybeSingle()
-
-  if (!info) {
+  const infoRes = await query('SELECT id_info_inst FROM informacion_institucional LIMIT 1')
+  if (infoRes.rows.length === 0) {
     return { error: 'No existe un registro de información institucional. Crea uno primero.' }
   }
+  const info = infoRes.rows[0]
 
-  const { error } = await supabaseAdmin.from('autoridades_info_institucional').insert({
-    nombres,
-    apellidos,
-    correo_contactos: correo,
-    ruta_foto: fotoUrl,
-    id_info_inst: info.id_info_inst,
-  })
-
-  if (error) return { error: 'Error al crear representante: ' + error.message }
+  try {
+    await query(
+      'INSERT INTO autoridades_info_institucional (nombres, apellidos, correo_contactos, ruta_foto, id_info_inst) VALUES ($1, $2, $3, $4, $5)',
+      [nombres, apellidos, correo, fotoUrl, info.id_info_inst]
+    )
+  } catch (error: any) {
+    return { error: 'Error al crear representante: ' + error.message }
+  }
 
   revalidatePath('/admin/institucional')
   revalidatePath('/institucional')
@@ -57,12 +51,11 @@ export async function eliminarAutoridad(id: number): Promise<AutoridadState> {
     await requireAdmin()
     if (!Number.isFinite(id) || id <= 0) return { error: 'ID inválido.' }
 
-    const { error } = await supabaseAdmin
-      .from('autoridades_info_institucional')
-      .delete()
-      .eq('id_autoridades_info_institu', id)
-
-    if (error) return { error: 'Error al eliminar: ' + error.message }
+    try {
+      await query('DELETE FROM autoridades_info_institucional WHERE id_autoridades_info_institu = $1', [id])
+    } catch (error: any) {
+      return { error: 'Error al eliminar: ' + error.message }
+    }
 
     revalidatePath('/admin/institucional')
     revalidatePath('/institucional')

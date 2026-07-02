@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { supabaseAdmin as supabase } from '@/lib/supabase'
-import { ACTIVIDADES_SELECT, getRutaImagenActividad } from '@/lib/actividad-archivos'
+import { query } from '@/lib/db'
+import { getRutaImagenActividad } from '@/lib/actividad-archivos'
+import { fetchActividadesPublicas } from '@/lib/actividades-query'
 import CarteleraSection from '@/components/CarteleraSection'
 import HeroSlider from '@/components/HeroSlider'
 import SidePanelActivos from '@/components/SidePanelActivos'
@@ -11,17 +12,11 @@ export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const [{ data: agendaMes, error: errorAgenda }, { data: config }] = await Promise.all([
-    supabase
-      .from('actividades')
-      .select(ACTIVIDADES_SELECT)
-      .eq('visible', true)
-      .order('fecha_publicacion', { ascending: false })
-      .limit(12),
-    supabase
-      .from('informacion_institucional')
-      .select('carrusel_urls')
-      .limit(1)
-      .maybeSingle(),
+    fetchActividadesPublicas(12),
+    (async () => {
+      const res = await query('SELECT carrusel_urls FROM informacion_institucional LIMIT 1')
+      return { data: res.rows.length > 0 ? res.rows[0] : null }
+    })()
   ])
 
   const recientes = (agendaMes ?? []).slice(0, 4)
@@ -58,7 +53,7 @@ export default async function HomePage() {
             tipo: act.tipo,
             fecha_publicacion: act.fecha_publicacion,
             fecha_fin: act.fecha_fin,
-            url_imagen: getRutaImagenActividad(act),
+            url_imagen: act.url_imagen ?? null,
           }))}
         />
       ) : !errorAgenda ? (
@@ -67,8 +62,8 @@ export default async function HomePage() {
             <div className={styles.emptyState}>
               <span className={styles.emptyIcon}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="20" height="16" x="2" y="4" rx="2"/>
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  <rect width="20" height="16" x="2" y="4" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
               </span>
               <h3>No hay actividades publicadas</h3>

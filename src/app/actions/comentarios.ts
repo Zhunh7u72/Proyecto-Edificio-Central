@@ -1,31 +1,25 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth-admin'
 import { guardarArchivoComentario } from '@/lib/comentario-archivos'
 import { revalidatePath } from 'next/cache'
 import type { ComentarioState } from '@/lib/types/comentarios'
 
 async function findOrCreateEstudiante(nombres: string, apellidos: string, correo: string) {
-  const { data: existing } = await supabaseAdmin
-    .from('usuarios')
-    .select('id_usuario')
-    .eq('correo', correo)
-    .maybeSingle()
+  const existingRes = await query('SELECT id_usuario FROM usuarios WHERE correo = $1', [correo])
+  if (existingRes.rows.length > 0) return { userId: existingRes.rows[0].id_usuario as number }
 
-  if (existing) return { userId: existing.id_usuario as number }
-
-  const { data: newUser, error } = await supabaseAdmin
-    .from('usuarios')
-    .insert({ nombres, apellidos, correo, rol: 'Estudiante' })
-    .select('id_usuario')
-    .single()
-
-  if (error || !newUser) {
+  try {
+    const newRes = await query(
+      'INSERT INTO usuarios (nombres, apellidos, correo, rol) VALUES ($1, $2, $3, $4) RETURNING id_usuario',
+      [nombres, apellidos, correo, 'Estudiante']
+    )
+    if (newRes.rowCount === 0) throw new Error()
+    return { userId: newRes.rows[0].id_usuario as number }
+  } catch (error) {
     return { error: 'No se pudo registrar al estudiante. Verifica tu correo.' }
   }
-
-  return { userId: newUser.id_usuario as number }
 }
 
 export async function publicarComentario(
@@ -45,28 +39,21 @@ export async function publicarComentario(
   }
   if (!contenido_texto) return { error: 'Escribe un comentario antes de publicar.' }
 
-  const { data: actividad } = await supabaseAdmin
-    .from('actividades')
-    .select('id_actividad')
-    .eq('id_actividad', id_actividad)
-    .single()
-
-  if (!actividad) return { error: 'La publicación no existe.' }
+  const resAct = await query('SELECT id_actividad FROM actividades WHERE id_actividad = $1', [id_actividad])
+  if (resAct.rows.length === 0) return { error: 'La publicación no existe.' }
 
   const estudiante = await findOrCreateEstudiante(nombres, apellidos, correo)
   if ('error' in estudiante && estudiante.error) return { error: estudiante.error }
 
-  const { data: comentario, error: comentarioError } = await supabaseAdmin
-    .from('comentarios')
-    .insert({
-      id_actividad,
-      id_usuario: estudiante.userId,
-      contenido_texto,
-    })
-    .select('id_comentario')
-    .single()
-
-  if (comentarioError || !comentario) {
+  let comentario = null
+  try {
+    const resCom = await query(
+      'INSERT INTO comentarios (id_actividad, id_usuario, contenido_texto) VALUES ($1, $2, $3) RETURNING id_comentario',
+      [id_actividad, estudiante.userId, contenido_texto]
+    )
+    if (resCom.rowCount === 0) throw new Error()
+    comentario = resCom.rows[0]
+  } catch (comentarioError) {
     console.error('[comentario] publicar:', comentarioError)
     return { error: 'No se pudo publicar el comentario. Intenta nuevamente.' }
   }
@@ -75,18 +62,17 @@ export async function publicarComentario(
   if (hasFile) {
     const saved = await guardarArchivoComentario(archivo, id_actividad)
     if ('error' in saved) {
-      await supabaseAdmin.from('comentarios').delete().eq('id_comentario', comentario.id_comentario)
+      await query('DELETE FROM comentarios WHERE id_comentario = $1', [comentario.id_comentario])
       return { error: saved.error }
     }
 
-    const { error: archivoError } = await supabaseAdmin.from('archivos_interaccion').insert({
-      id_comentario: comentario.id_comentario,
-      ruta_archivo: saved.ruta,
-      tipo_archivo: saved.tipo,
-    })
-
-    if (archivoError) {
-      await supabaseAdmin.from('comentarios').delete().eq('id_comentario', comentario.id_comentario)
+    try {
+      await query(
+        'INSERT INTO archivos_interaccion (id_comentario, ruta_archivo, tipo_archivo) VALUES ($1, $2, $3)',
+        [comentario.id_comentario, saved.ruta, saved.tipo]
+      )
+    } catch (archivoError) {
+      await query('DELETE FROM comentarios WHERE id_comentario = $1', [comentario.id_comentario])
       return { error: 'Error al guardar el archivo adjunto.' }
     }
   }
@@ -102,22 +88,14 @@ export async function eliminarComentario(id_comentario: number): Promise<{ error
       return { error: 'ID de comentario inválido.' }
     }
 
-    const { data: comentario } = await supabaseAdmin
-      .from('comentarios')
-      .select('id_comentario')
-      .eq('id_comentario', id_comentario)
-      .maybeSingle()
+    const resCom = await query('SELECT id_comentario FROM comentarios WHERE id_comentario = $1', [id_comentario])
+    if (resCom.rows.length === 0) return { error: 'Comentario no encontrado.' }
 
-    if (!comentario) return { error: 'Comentario no encontrado.' }
+    await query('DELETE FROM archivos_interaccion WHERE id_comentario = $1', [id_comentario])
 
-    await supabaseAdmin.from('archivos_interaccion').delete().eq('id_comentario', id_comentario)
-
-    const { error } = await supabaseAdmin
-      .from('comentarios')
-      .delete()
-      .eq('id_comentario', id_comentario)
-
-    if (error) {
+    try {
+      await query('DELETE FROM comentarios WHERE id_comentario = $1', [id_comentario])
+    } catch (error: any) {
       return { error: 'Error al eliminar el comentario: ' + error.message }
     }
 

@@ -1,6 +1,6 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
 import type { ActionState } from '@/lib/types/admin'
@@ -22,12 +22,14 @@ export async function crearGaleria(
     if (!id_facultad_carrera) return { error: 'Selecciona una carrera.' }
     if (!ruta_foto) return { error: 'El link de la imagen es obligatorio.' }
 
-    const { error } = await supabaseAdmin.from('fotos_carreras').insert({
-      id_facultad_carrera,
-      ruta_foto,
-    })
-
-    if (error) return { error: 'Error al crear: ' + error.message }
+    try {
+      await query(
+        'INSERT INTO fotos_carreras (id_facultad_carrera, ruta_foto) VALUES ($1, $2)',
+        [id_facultad_carrera, ruta_foto]
+      )
+    } catch (error: any) {
+      return { error: 'Error al crear: ' + error.message }
+    }
     revalidate()
     return { success: 'Foto de galería creada exitosamente.' }
   } catch {
@@ -48,12 +50,14 @@ export async function actualizarGaleria(
     if (!id_facultad_carrera) return { error: 'Selecciona una carrera.' }
     if (!ruta_foto) return { error: 'El link de la imagen es obligatorio.' }
 
-    const { error } = await supabaseAdmin
-      .from('fotos_carreras')
-      .update({ id_facultad_carrera, ruta_foto })
-      .eq('id_foto_carre', id)
-
-    if (error) return { error: 'Error al actualizar: ' + error.message }
+    try {
+      await query(
+        'UPDATE fotos_carreras SET id_facultad_carrera = $1, ruta_foto = $2 WHERE id_foto_carre = $3',
+        [id_facultad_carrera, ruta_foto, id]
+      )
+    } catch (error: any) {
+      return { error: 'Error al actualizar: ' + error.message }
+    }
     revalidate()
     return { success: 'Galería actualizada.' }
   } catch {
@@ -64,8 +68,11 @@ export async function actualizarGaleria(
 export async function eliminarGaleria(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
-    const { error } = await supabaseAdmin.from('fotos_carreras').delete().eq('id_foto_carre', id)
-    if (error) return { error: 'Error al eliminar: ' + error.message }
+    try {
+      await query('DELETE FROM fotos_carreras WHERE id_foto_carre = $1', [id])
+    } catch (error: any) {
+      return { error: 'Error al eliminar: ' + error.message }
+    }
     revalidate()
     return { success: 'Registro eliminado.' }
   } catch {
