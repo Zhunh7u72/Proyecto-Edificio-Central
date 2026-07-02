@@ -23,20 +23,21 @@ async function syncContactoCarrera(id_facultad_carrera: number, formData: FormDa
   const contacto = (formData.get('contacto') as string)?.trim() || null
   const tipo_contacto = (formData.get('tipo_contacto') as string)?.trim() || null
 
-  await supabaseAdmin
-    .from('contactos_carreras')
-    .delete()
-    .eq('id_facultad_carrera', id_facultad_carrera)
-
-  if (!contacto) return
+  if (!contacto) {
+    await supabaseAdmin
+      .from('contactos_carreras')
+      .delete()
+      .eq('id_facultad_carrera', id_facultad_carrera)
+    return
+  }
 
   const tipo = tipo_contacto && TIPOS_CONTACTO.has(tipo_contacto) ? tipo_contacto : 'mail'
 
-  await supabaseAdmin.from('contactos_carreras').insert({
+  await supabaseAdmin.from('contactos_carreras').upsert({
     id_facultad_carrera,
     contacto,
     tipo_contacto: tipo,
-  })
+  }, { onConflict: 'id_facultad_carrera' })
 }
 
 export async function crearAsociacion(
@@ -62,8 +63,10 @@ export async function crearAsociacion(
     await syncContactoCarrera(data.id_facultad_carrera, formData)
     revalidate()
     return { success: 'Asociación / carrera creada exitosamente.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en crearAsociacion:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
 
@@ -90,8 +93,10 @@ export async function actualizarAsociacion(
     await syncContactoCarrera(id, formData)
     revalidate()
     return { success: 'Asociación actualizada.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en actualizarAsociacion:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
 
@@ -99,8 +104,10 @@ export async function eliminarAsociacion(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
 
-    await supabaseAdmin.from('fotos_carreras').delete().eq('id_facultad_carrera', id)
-    await supabaseAdmin.from('contactos_carreras').delete().eq('id_facultad_carrera', id)
+    await Promise.all([
+      supabaseAdmin.from('fotos_carreras').delete().eq('id_facultad_carrera', id),
+      supabaseAdmin.from('contactos_carreras').delete().eq('id_facultad_carrera', id)
+    ])
 
     const { error } = await supabaseAdmin
       .from('facultades_carreras')
@@ -110,7 +117,9 @@ export async function eliminarAsociacion(id: number): Promise<ActionState> {
     if (error) return { error: 'Error al eliminar: ' + error.message }
     revalidate()
     return { success: 'Asociación eliminada.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en eliminarAsociacion:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }

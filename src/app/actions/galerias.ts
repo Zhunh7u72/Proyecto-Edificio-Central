@@ -36,8 +36,10 @@ export async function crearGaleria(
     if (error) return { error: 'Error al crear: ' + error.message }
     revalidate()
     return { success: 'Foto de galería creada exitosamente.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en crearGaleria:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
 
@@ -62,8 +64,10 @@ export async function actualizarGaleria(
     if (error) return { error: 'Error al actualizar: ' + error.message }
     revalidate()
     return { success: 'Galería actualizada.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en actualizarGaleria:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
 
@@ -74,7 +78,9 @@ export async function eliminarGaleria(id: number): Promise<ActionState> {
     if (error) return { error: 'Error al eliminar: ' + error.message }
     revalidate()
     return { success: 'Registro eliminado.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en eliminarGaleria:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }

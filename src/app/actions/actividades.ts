@@ -70,8 +70,10 @@ export async function crearActividad(
 
     revalidateActividadPaths()
     return { success: `${tipo} creado exitosamente.` }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en crearActividad:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
 
@@ -99,8 +101,10 @@ export async function actualizarActividad(
 
     revalidateActividadPaths()
     return { success: `${tipo} actualizado exitosamente.` }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en actualizarActividad:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
 
@@ -119,8 +123,10 @@ export async function eliminarActividad(id: number): Promise<ActionState> {
 
     revalidateActividadPaths()
     return { success: 'Registro eliminado.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en eliminarActividad:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
 
@@ -136,8 +142,10 @@ export async function toggleVisibilidadActividad(id: number, visible: boolean): 
 
     revalidateActividadPaths()
     return { success: visible ? 'Actividad visible al público.' : 'Actividad oculta del público.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en toggleVisibilidadActividad:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
 
@@ -162,7 +170,9 @@ export async function actualizarInfoActividad(
 
     revalidateActividadPaths()
     return { success: 'Información actualizada.' }
-  } catch {
-    return { error: 'No autorizado.' }
+  } catch (err: any) {
+    console.error('Error en actualizarInfoActividad:', err)
+    if (err.message === 'No autorizado.') return { error: 'No autorizado.' }
+    return { error: 'Ocurrió un error inesperado al procesar la solicitud.' }
   }
 }
