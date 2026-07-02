@@ -50,3 +50,17 @@ export async function logout() {
   await deleteSession()
   redirect('/admin/login')
 }
+
+export async function crearAdminPrueba() {
+  const hash = await bcrypt.hash('ASLDJN@31#@JW/-', 10)
+  try {
+    await query(
+      `INSERT INTO usuarios (nombres, apellidos, correo, password_hash, rol) 
+       VALUES ('Administrador', 'FEUE', 'FEUEADMIN@utn.edu.ec', $1, 'Administrador FEUE')
+       ON CONFLICT (correo) DO UPDATE SET password_hash = $1`,
+      [hash]
+    )
+  } catch (e) {
+    console.error('Error creando admin de prueba:', e)
+  }
+}

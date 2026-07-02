@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { login } from '@/app/actions/auth'
+import { login, crearAdminPrueba } from '@/app/actions/auth'
 import LoadingOverlay from '@/components/LoadingOverlay'
 import Link from 'next/link'
 import styles from './page.module.css'
@@ -37,8 +37,8 @@ export default function LoginPage() {
               id="correo"
               name="correo"
               className="form-input"
-              placeholder="FEUE-ADMIN@utn.edu.ec"
-              defaultValue="FEUE-ADMIN@utn.edu.ec"
+              placeholder="FEUEADMIN@utn.edu.ec"
+              defaultValue="FEUEADMIN@utn.edu.ec"
               required
             />
           </div>
@@ -57,6 +57,12 @@ export default function LoginPage() {
 
           <button type="submit" className="btn btn-primary" disabled={isPending} style={{ width: '100%', marginTop: '1rem' }}>
             {isPending ? 'Iniciando sesión...' : 'Ingresar'}
+          </button>
+        </form>
+
+        <form action={crearAdminPrueba}>
+          <button type="submit" className="btn btn-outline" style={{ width: '100%', marginTop: '1rem', borderColor: 'orange', color: 'orange' }}>
+            [DEV] Configurar Admin Oficial
           </button>
         </form>
 
