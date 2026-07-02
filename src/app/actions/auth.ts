@@ -52,7 +52,8 @@ export async function logout() {
 }
 
 export async function actualizarAdminPrueba(formData: FormData) {
-  const newEmail = formData.get('new_email')?.toString();
+  const rawEmail = formData.get('new_email')?.toString();
+  const newEmail = rawEmail ? rawEmail.trim().toLowerCase() : null;
   const newPassword = formData.get('new_password')?.toString();
 
   if (!newEmail || !newPassword) return;
