@@ -6,6 +6,7 @@ import { crearActividad } from '@/app/actions/actividades'
 import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
+import { ACCEPT_SOLO_IMAGENES, ETIQUETA_FORMATOS_IMAGEN } from '@/lib/archivo-constants'
 import ActividadDetalleModal from '@/components/admin/ActividadDetalleModal'
 
 interface Props {
@@ -144,10 +145,10 @@ export default function ActividadesClient({ actividades, comentariosPorActividad
                   type="file"
                   name="archivos"
                   className="form-input"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  accept={ACCEPT_SOLO_IMAGENES}
                 />
                 <small style={{ color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
-                  Imagen principal del evento para la cartelera y tarjetas (máx. 5 MB).
+                  Solo {ETIQUETA_FORMATOS_IMAGEN} (máx. 5 MB).
                 </small>
               </div>
               <div className="form-group">

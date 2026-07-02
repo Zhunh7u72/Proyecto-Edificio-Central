@@ -9,6 +9,7 @@ import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
 import { urlPdfInscripcionAdmin } from '@/lib/inscripcion-pdf-url'
+import { ACCEPT_SOLO_IMAGENES, ETIQUETA_FORMATOS_IMAGEN } from '@/lib/archivo-constants'
 import styles from './ActividadDetalleModal.module.css'
 
 type Tab = 'info' | 'inscritos' | 'comentarios' | 'memoria'
@@ -365,9 +366,9 @@ export default function ActividadDetalleModal({ actividad, comentarios, inscripc
 
                     <div className={styles.infoField}>
                       <label>Subir Fotografías de Evidencia <span style={{ color: 'var(--color-danger, #c00)' }}>*</span></label>
-                      <input type="file" name="fotos_archivos" multiple accept="image/*" required />
+                      <input type="file" name="fotos_archivos" multiple accept={ACCEPT_SOLO_IMAGENES} required />
                       <small style={{ color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
-                        Obligatorio: escribe el resumen y selecciona al menos una imagen.
+                        Obligatorio: resumen y al menos una imagen ({ETIQUETA_FORMATOS_IMAGEN}).
                       </small>
                     </div>
 

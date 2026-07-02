@@ -11,6 +11,7 @@ import type { ComentarioPublico } from '@/lib/types/comentarios'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
 import AdminComentariosModal from '@/components/admin/AdminComentariosModal'
 import LoadingOverlay from '@/components/LoadingOverlay'
+import { ACCEPT_SOLO_IMAGENES, ETIQUETA_FORMATOS_IMAGEN } from '@/lib/archivo-constants'
 import styles from './admin.module.css'
 
 interface ActividadCrudProps {
@@ -224,10 +225,10 @@ export default function ActividadCrud({
                     type="file"
                     name="archivos"
                     className="form-input"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    accept={ACCEPT_SOLO_IMAGENES}
                     multiple
                   />
-                  <small className={styles.fileHint}>Puedes subir varias fotos (max 5MB c/u)</small>
+                  <small className={styles.fileHint}>Solo {ETIQUETA_FORMATOS_IMAGEN} (máx. 5MB c/u)</small>
                 </div>
 
                 <div className="form-group">

@@ -3,6 +3,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-admin'
 import { TIPO_ARCHIVO_FOTO } from '@/lib/archivo-constants'
+import { validarArchivoImagen } from '@/lib/validar-contenido-archivo'
 import { revalidatePath } from 'next/cache'
 
 export type MemoriaState = { error?: string; success?: string } | undefined
@@ -42,8 +43,13 @@ export async function guardarMemoriaActividad(
   const urls: string[] = []
 
   for (const file of validFiles) {
-      const extension = file.name.split('.').pop()
-      const safeName = `memoria-${id_actividad}-${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
+    const validacion = await validarArchivoImagen(file)
+    if ('error' in validacion) {
+      return { error: validacion.error }
+    }
+
+    const extension = file.name.split('.').pop()?.toLowerCase()
+    const safeName = `memoria-${id_actividad}-${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
       
       const { error: uploadError } = await supabaseAdmin.storage
         .from('archivos_publicos')

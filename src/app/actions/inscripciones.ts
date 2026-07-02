@@ -4,10 +4,10 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 import {
   PDF_INSCRIPCION_MAX_BYTES,
-  PDF_INSCRIPCION_TIPOS,
   BUCKET_DOCUMENTOS_INSCRIPCION,
 } from '@/lib/config'
 import { TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
+import { validarArchivoPdf } from '@/lib/validar-contenido-archivo'
 
 export type InscripcionState = {
   error?: string
@@ -43,15 +43,9 @@ export async function inscribirEstudiante(
   }
 
   if (archivoPdf && archivoPdf.size > 0) {
-    const esPdf =
-      PDF_INSCRIPCION_TIPOS.includes(archivoPdf.type) ||
-      archivoPdf.name.toLowerCase().endsWith('.pdf')
-    if (!esPdf) {
-      return { error: 'Solo se permiten archivos PDF.' }
-    }
-    if (archivoPdf.size > PDF_INSCRIPCION_MAX_BYTES) {
-      const maxMB = PDF_INSCRIPCION_MAX_BYTES / 1024 / 1024
-      return { error: `El archivo supera el límite permitido de ${maxMB} MB.` }
+    const validacion = await validarArchivoPdf(archivoPdf, PDF_INSCRIPCION_MAX_BYTES)
+    if ('error' in validacion) {
+      return { error: validacion.error }
     }
   }
 

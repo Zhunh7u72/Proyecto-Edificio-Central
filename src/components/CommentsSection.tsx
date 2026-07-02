@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { publicarComentario } from '@/app/actions/comentarios'
-import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF, nombreArchivoDesdeRuta } from '@/lib/archivo-constants'
+import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF, nombreArchivoDesdeRuta, ACCEPT_SOLO_IMAGENES } from '@/lib/archivo-constants'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 import LoadingOverlay from '@/components/LoadingOverlay'
 import styles from './CommentsSection.module.css'
@@ -125,7 +125,7 @@ export default function CommentsSection({ idActividad, comentarios }: CommentsSe
                   ref={fileInputRef}
                   type="file"
                   name="archivo"
-                  accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.pdf"
+                  accept={`${ACCEPT_SOLO_IMAGENES},application/pdf,.pdf`}
                   className={styles.fileInput}
                   onChange={handleFileChange}
                 />

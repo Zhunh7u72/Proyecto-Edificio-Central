@@ -1,6 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase'
-import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
+import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF, MAX_IMAGEN_BYTES } from '@/lib/archivo-constants'
+import { validarArchivoImagen } from '@/lib/validar-contenido-archivo'
 
 export { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
 export interface ArchivoActividad {
@@ -47,17 +48,11 @@ export function mapActividadConImagen<T extends ActividadConArchivos>(actividad:
   }
 }
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+const MAX_FILE_BYTES = MAX_IMAGEN_BYTES
 
 export async function guardarArchivoActividad(file: File, id_actividad: number): Promise<{ ruta: string; tipo: string } | { error: string }> {
-  if (file.size > MAX_FILE_BYTES) {
-    return { error: 'Las imágenes no pueden superar 5 MB.' }
-  }
-  
-  if (!file.type.startsWith('image/') && !ALLOWED_IMAGE_TYPES.has(file.type) && !/\.(jpe?g|png|gif|webp)$/i.test(file.name)) {
-    return { error: 'Solo se permiten imágenes (JPG, PNG, GIF, WEBP).' }
-  }
+  const validacion = await validarArchivoImagen(file, MAX_FILE_BYTES)
+  if ('error' in validacion) return { error: validacion.error }
 
   const extension = file.name.split('.').pop()
   const safeName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
