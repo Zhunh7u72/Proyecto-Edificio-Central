@@ -1,5 +1,5 @@
 # Rebuilder de la imagen base Node
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Dependencias
 FROM base AS deps

@@ -99,9 +99,9 @@ export default function ActividadCrud({
   const handleDeletePhoto = async (idArchivo: number) => {
     if (confirm('¿Borrar esta imagen permanentemente del servidor?')) {
       const res = await eliminarArchivoActividadAction(idArchivo)
-      if (res.error) alert(res.error)
+      if (res?.error) alert(res.error)
       else {
-        alert(res.success)
+        alert(res?.success || 'Archivo eliminado')
         closeModal()
       }
     }
