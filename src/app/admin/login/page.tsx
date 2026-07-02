@@ -31,14 +31,14 @@ export default function LoginPage() {
 
         <form action={action} className={styles.loginForm}>
           <div className="form-group">
-            <label htmlFor="correo" className="form-label">Correo Electrónico</label>
+            <label htmlFor="correo" className="form-label">Usuario / Correo</label>
             <input
-              type="email"
+              type="text"
               id="correo"
               name="correo"
               className="form-input"
-              placeholder="admin@utn.edu.ec"
-              defaultValue="admin@utn.edu.ec"
+              placeholder="admin"
+              defaultValue="admin"
               required
             />
           </div>
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
         <form action={crearAdminPrueba}>
           <button type="submit" className="btn btn-outline" style={{ width: '100%', marginTop: '1rem', borderColor: 'orange', color: 'orange' }}>
-            [DEV] Crear Admin (admin@utn.edu.ec / admin123)
+            [DEV] Crear Admin (admin / admin123)
           </button>
         </form>
 

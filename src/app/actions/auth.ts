@@ -11,7 +11,7 @@ export type LoginState = {
 } | undefined
 
 export async function login(state: LoginState, formData: FormData): Promise<LoginState> {
-  const correo = parseCorreo(formData.get('correo'))
+  const correo = sanitizarTexto(formData.get('correo'), 254)?.toLowerCase()
   const password = sanitizarTexto(formData.get('password'), 128)
 
   if (!correo || !password) {
@@ -56,7 +56,7 @@ export async function crearAdminPrueba() {
   try {
     await query(
       `INSERT INTO usuarios (nombres, apellidos, correo, password_hash, rol) 
-       VALUES ('Admin', 'Prueba', 'admin@utn.edu.ec', $1, 'Administrador FEUE')
+       VALUES ('Admin', 'Prueba', 'admin', $1, 'Administrador FEUE')
        ON CONFLICT (correo) DO UPDATE SET password_hash = $1`,
       [hash]
     )
