@@ -23,6 +23,42 @@
   flex-wrap: wrap;
 }
 
+.filterGroup {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  color: var(--utn-dark);
+  flex-wrap: wrap;
+}
+
+.filterLabel span {
+  white-space: nowrap;
+}
+
+.filterLabel select,
+.filterLabel input {
+  min-width: 180px;
+  margin: 0;
+}
+
+.filterLabel input {
+  min-width: 260px;
+}
+
+.filterCount {
+  color: var(--utn-gray);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
 .tableWrapper {
   background: #fff;
   border-radius: var(--radius-md);
