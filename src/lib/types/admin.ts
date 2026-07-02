@@ -13,6 +13,7 @@ export interface Actividad {
   archivos_actividades?: {
     id_archivo_activi: number
     ruta_archivo: string
+    tipo_archivo?: string
   }[] | null
 }
 
