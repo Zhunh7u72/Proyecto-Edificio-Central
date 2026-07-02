@@ -1,0 +1,153 @@
+.wrapper {
+  background: #fff;
+  min-height: calc(100vh - 200px);
+  position: relative;
+}
+
+.hero {
+  background: var(--utn-dark);
+  padding: 2.5rem 0;
+}
+
+.heroTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.breadcrumb {
+  background: var(--utn-light);
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.85rem;
+}
+
+.breadcrumb a {
+  color: var(--utn-gray);
+  transition: color var(--transition-fast);
+}
+
+.breadcrumb a:hover {
+  color: var(--utn-red);
+}
+
+.breadcrumbSep {
+  color: var(--utn-gray);
+}
+
+.breadcrumbCurrent {
+  color: var(--utn-red);
+  font-weight: 600;
+}
+
+.content {
+  padding: 3rem 0 4rem;
+}
+
+.sectionTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--utn-dark);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+.contentBox {
+  border: 2px solid var(--utn-red);
+  border-radius: 20px;
+  padding: 2rem 2.5rem;
+  font-size: 1rem;
+  line-height: 1.85;
+  color: var(--utn-dark);
+}
+
+.contentBox p {
+  margin-bottom: 1rem;
+}
+
+.contentBox p:last-child {
+  margin-bottom: 0;
+}
+
+.contentBox ul {
+  list-style: none;
+  padding: 0;
+}
+
+.contentBox li {
+  padding: 0.6rem 0;
+  border-bottom: 1px dashed #e0e0e0;
+}
+
+.contentBox li:last-child {
+  border-bottom: none;
+}
+
+.autoridadCard {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  padding: 1.25rem 0;
+  border-bottom: 1px dashed #e0e0e0;
+}
+
+.autoridadCard:last-child {
+  border-bottom: none;
+}
+
+.autoridadFoto {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.autoridadInfo h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--utn-dark);
+  margin-bottom: 0.25rem;
+}
+
+.autoridadInfo p {
+  font-size: 0.95rem;
+  color: var(--utn-gray);
+  margin-bottom: 0;
+}
+
+.backToTop {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 42px;
+  height: 42px;
+  background: var(--utn-red);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background var(--transition-fast);
+  z-index: 100;
+}
+
+.backToTop:hover {
+  background: var(--utn-red-hover);
+}
+
+@media (max-width: 640px) {
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+
+  .contentBox {
+    padding: 1.5rem;
+    border-radius: 14px;
+  }
+
+  .sectionTitle {
+    font-size: 1.4rem;
+  }
+}

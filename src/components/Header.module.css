@@ -6,10 +6,10 @@
 
 /* Barra superior */
 .topBar {
-  background: var(--color-bg-dark);
-  color: var(--color-footer-text);
-  font-size: 0.8rem;
-  padding: 0.4rem 0;
+  background: var(--utn-dark);
+  color: var(--utn-light);
+  font-size: 0.92rem;
+  padding: 0.5rem 0;
 }
 
 .topBarInner {
@@ -24,96 +24,193 @@
 }
 
 .topBarLinks a {
-  color: var(--color-footer-text);
+  color: var(--utn-light);
   transition: color var(--transition-fast);
 }
 
 .topBarLinks a:hover {
-  color: var(--color-text-light);
+  color: #fff;
 }
 
-/* Navbar */
+/* Navbar — estilo UTN */
 .navbar {
-  background: var(--color-bg);
-  box-shadow: var(--shadow-sm);
-  padding: 0.6rem 0;
+  background: var(--utn-red);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  padding: 0;
 }
 
 .navInner {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 96px;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding-left: 0.35rem;
+  padding-right: 1.25rem;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 2rem;
   text-decoration: none;
+  flex-shrink: 0;
+  padding: 0;
+  align-self: center;
+  min-height: 96px;
 }
 
 .logo {
-  height: 45px;
+  height: 84px;
   width: auto;
-  border-radius: 50%;
+  max-width: 150px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: white; /* just in case the image is transparent and looks weird against red, but usually it's fine. Wait, the user's screenshot has a white background already, it's a JPEG */
 }
 
 .brandText {
   display: flex;
   flex-direction: column;
+  gap: 0.2rem;
+  margin-left: 0.25rem;
+  padding-left: 0.5rem;
 }
 
 .brandTitle {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--color-secondary);
-  line-height: 1.2;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding-top: 0;
 }
 
 .brandSubtitle {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-primary);
+  color: rgba(255, 255, 255, 0.9);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
 }
 
-/* Navegación */
 .navLinks {
   display: flex;
   list-style: none;
-  align-items: center;
-  gap: 1.8rem;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  align-self: stretch;
+  margin-left: auto;
 }
 
-.navLinks li a {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--color-text);
-  transition: color var(--transition-fast);
+.navLinks > li {
+  display: flex;
+  align-items: stretch;
+}
+
+.navLinks > li > a,
+.dropdownToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 1.5rem;
+  min-height: 96px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.navLinks > li > a:hover,
+.dropdownToggle:hover,
+.dropdownOpen > .dropdownToggle {
+  background: var(--utn-red-hover);
+}
+
+.dropdown {
   position: relative;
 }
 
-.navLinks li a:not(.btn)::after {
+.dropdownArrow {
+  transition: transform var(--transition-fast);
+}
+
+.dropdownOpen > .dropdownToggle .dropdownArrow {
+  transform: rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  min-width: 220px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+  z-index: 100;
+}
+
+.dropdownMenu::before {
   content: '';
   position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: var(--color-primary);
-  transition: width var(--transition-normal);
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+  filter: drop-shadow(0 -1px 0 #ddd);
 }
 
-.navLinks li a:not(.btn):hover::after {
-  width: 100%;
+.dropdownOpen .dropdownMenu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
 }
 
-.navLinks li a:hover {
-  color: var(--color-primary);
+.dropdownMenu li a {
+  display: block;
+  padding: 0.85rem 1.35rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--utn-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  border-bottom: 1px solid #f0f0f0;
 }
 
-/* Hamburger menu */
+.dropdownMenu li:last-child a {
+  border-bottom: none;
+}
+
+.dropdownMenu li a:hover {
+  background: var(--utn-light);
+  color: var(--utn-red);
+}
+
 .menuToggle {
   display: none;
   flex-direction: column;
@@ -128,8 +225,20 @@
   display: block;
   width: 24px;
   height: 2px;
-  background: var(--color-text);
+  background: #fff;
   transition: all var(--transition-normal);
+}
+
+.menuToggleOpen span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menuToggleOpen span:nth-child(2) {
+  opacity: 0;
+}
+
+.menuToggleOpen span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
 }
 
 @media (max-width: 768px) {
@@ -137,14 +246,38 @@
     display: flex;
   }
 
+  .navInner {
+    min-height: 72px;
+    padding-left: 0.25rem;
+  }
+
+  .brand {
+    min-height: 72px;
+    gap: 1.25rem;
+  }
+
+  .logo {
+    height: 56px;
+    max-width: 110px;
+  }
+
+  .brandTitle {
+    font-size: 1.25rem;
+  }
+
+  .brandSubtitle {
+    font-size: 0.68rem;
+  }
+
   .navLinks {
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
-    background: var(--color-bg);
+    background: var(--utn-red);
     flex-direction: column;
-    padding: 1rem 1.5rem;
+    align-items: stretch;
+    padding: 0;
     box-shadow: var(--shadow-lg);
     transform: translateY(-10px);
     opacity: 0;
@@ -156,6 +289,47 @@
     transform: translateY(0);
     opacity: 1;
     pointer-events: all;
+  }
+
+  .navLinks > li > a,
+  .dropdownToggle {
+    padding: 1rem 1.5rem;
+    min-height: auto;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dropdownMenu {
+    position: static;
+    transform: none;
+    box-shadow: none;
+    border: none;
+    background: var(--utn-red-hover);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+    transition: max-height var(--transition-normal);
+  }
+
+  .dropdownMenu::before {
+    display: none;
+  }
+
+  .dropdownOpen .dropdownMenu {
+    max-height: 400px;
+  }
+
+  .dropdownMenu li a {
+    color: rgba(255, 255, 255, 0.95);
+    padding-left: 2.5rem;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .dropdownMenu li a:hover {
+    background: rgba(0, 0, 0, 0.15);
+    color: #fff;
   }
 
   .topBarLinks {

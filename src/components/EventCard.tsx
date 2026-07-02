@@ -8,8 +8,12 @@ interface EventCardProps {
   tipo: string
   fecha_publicacion: string
   fecha_limite_inscripcion: string | null
-  // 1. Añadimos la propiedad para recibir la URL de la imagen
-  imagenUrl?: string | null 
+  url_imagen?: string | null
+}
+
+function tipoLabel(tipo: string) {
+  if (tipo === 'Capacitacion') return 'Capacitación'
+  return tipo
 }
 
 export default function EventCard({
@@ -19,57 +23,50 @@ export default function EventCard({
   tipo,
   fecha_publicacion,
   fecha_limite_inscripcion,
-  imagenUrl, // 2. Extraemos la propiedad
+  url_imagen,
 }: EventCardProps) {
-  const badgeClass =
-    tipo === 'Evento'
-      ? styles.badgeEvento
-      : tipo === 'Anuncio'
-        ? styles.badgeAnuncio
-        : styles.badgeCapacitacion
+  const fecha = new Date(fecha_publicacion)
+  const dia = fecha.getDate()
+  const mes = fecha.toLocaleDateString('es-EC', { month: 'short' }).replace('.', '').toUpperCase()
 
-  const fechaPub = new Date(fecha_publicacion).toLocaleDateString('es-EC', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  const resumen = descripcion
+    ? descripcion.length > 100
+      ? descripcion.substring(0, 100) + '...'
+      : descripcion
+    : 'Sin descripción disponible.'
 
   return (
-    <div className={styles.card}>
+    <Link href={`/eventos/${id}`} className={styles.card}>
       <div className={styles.cardImageWrapper}>
-        
-        {/* 3. Lógica para mostrar la imagen real o el placeholder */}
-        {imagenUrl ? (
-          <img src={imagenUrl} alt={titulo} className={styles.cardImage} />
+        {url_imagen ? (
+          <img src={url_imagen} alt={titulo} className={styles.cardImage} loading="lazy" />
         ) : (
           <div className={styles.cardImagePlaceholder}>
-            <span className={styles.cardImageIcon}></span>
+            <span className={styles.cardImageIcon}>📰</span>
           </div>
         )}
-
-        <span className={`${styles.badge} ${badgeClass}`}>{tipo}</span>
-      </div>
-      <div className={styles.cardBody}>
-        <span className={styles.date}>{fechaPub}</span>
-        <h3 className={styles.title}>{titulo}</h3>
-        <p className={styles.excerpt}>
-          {descripcion
-            ? descripcion.length > 120
-              ? descripcion.substring(0, 120) + '...'
-              : descripcion
-            : 'Sin descripción disponible.'}
-        </p>
-        <div className={styles.cardFooter}>
-          {fecha_limite_inscripcion && (
-            <span className={styles.deadline}>
-              ⏰ Inscripción hasta: {new Date(fecha_limite_inscripcion).toLocaleDateString('es-EC')}
-            </span>
-          )}
-          <Link href={`/eventos/${id}`} className={styles.readMore}>
-            Ver más →
-          </Link>
+        <div className={styles.dateBadge} aria-hidden="true">
+          <span className={styles.dateDay}>{dia}</span>
+          <span className={styles.dateMonth}>{mes}</span>
         </div>
       </div>
-    </div>
+
+      <div className={styles.cardBody}>
+        <p className={styles.tipoLabel}>{tipoLabel(tipo)}</p>
+        <h3 className={styles.title}>{titulo}</h3>
+        <p className={styles.excerpt}>{resumen}</p>
+        {fecha_limite_inscripcion && (
+          <p className={styles.deadline}>
+            Inscripción hasta{' '}
+            {new Date(fecha_limite_inscripcion).toLocaleDateString('es-EC', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </p>
+        )}
+        <span className={styles.readMore}>Ver más →</span>
+      </div>
+    </Link>
   )
 }

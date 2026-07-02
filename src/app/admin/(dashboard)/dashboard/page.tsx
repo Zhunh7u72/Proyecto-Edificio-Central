@@ -1,45 +1,91 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { TIPO_ARCHIVO_PDF } from '@/lib/actividad-archivos'
+import Link from 'next/link'
+import styles from '@/components/admin/admin.module.css'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  // Estadísticas básicas
-  const { count: actCount } = await supabase
-    .from('actividades')
-    .select('*', { count: 'exact', head: true })
+  const [
+    { count: actCount },
+    { count: inscritosCount },
+    { count: usersCount },
+    { count: anunciosCount },
+    { count: eventosCount },
+    { count: capacitacionesCount },
+    { count: fotosCount },
+    { count: pdfsCount },
+    { count: facultadesCount },
+    { count: comentariosCount },
+  ] = await Promise.all([
+    supabase.from('actividades').select('*', { count: 'exact', head: true }),
+    supabase.from('matriculas_eventos').select('*', { count: 'exact', head: true }),
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('rol', 'Estudiante'),
+    supabase.from('actividades').select('*', { count: 'exact', head: true }).eq('tipo', 'Anuncio'),
+    supabase.from('actividades').select('*', { count: 'exact', head: true }).eq('tipo', 'Evento'),
+    supabase.from('actividades').select('*', { count: 'exact', head: true }).eq('tipo', 'Capacitacion'),
+    supabase.from('fotos_carreras').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('archivos_actividades')
+      .select('*', { count: 'exact', head: true })
+      .eq('tipo_archivo', TIPO_ARCHIVO_PDF),
+    supabase.from('facultades').select('*', { count: 'exact', head: true }),
+    supabase.from('comentarios').select('*', { count: 'exact', head: true }),
+  ])
 
-  const { count: inscritosCount } = await supabase
-    .from('matriculas_eventos')
-    .select('*', { count: 'exact', head: true })
+  const stats = [
+    { label: 'Total Actividades', value: actCount ?? 0 },
+    { label: 'Anuncios', value: anunciosCount ?? 0 },
+    { label: 'Eventos', value: eventosCount ?? 0 },
+    { label: 'Capacitaciones', value: capacitacionesCount ?? 0 },
+    { label: 'Fotos en galería', value: fotosCount ?? 0, alt: true },
+    { label: 'Documentos PDF', value: pdfsCount ?? 0, alt: true },
+    { label: 'Inscripciones', value: inscritosCount ?? 0, alt: true },
+    { label: 'Estudiantes', value: usersCount ?? 0, alt: true },
+    { label: 'Facultades', value: facultadesCount ?? 0, alt: true },
+    { label: 'Comentarios', value: comentariosCount ?? 0, alt: true },
+  ]
 
-  const { count: usersCount } = await supabase
-    .from('usuarios')
-    .select('*', { count: 'exact', head: true })
-    .eq('rol', 'Estudiante')
+  const quickLinks = [
+    { href: '/admin/anuncios', label: 'Gestionar Anuncios' },
+    { href: '/admin/eventos', label: 'Gestionar Eventos' },
+    { href: '/admin/capacitaciones', label: 'Gestionar Capacitaciones' },
+    { href: '/admin/inscripciones', label: 'Ver Inscripciones' },
+    { href: '/admin/galerias', label: 'Gestionar Galerías' },
+    { href: '/admin/documentos', label: 'Gestionar Documentos PDF' },
+  ]
 
   return (
     <div>
-      <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--color-secondary)' }}>
-        Dashboard
-      </h1>
-      <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
-        Resumen general de la plataforma.
-      </p>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Dashboard</h1>
+        <p className={styles.pageSubtitle}>Resumen general del panel administrativo FEUE — RU07</p>
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--color-border)' }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Total Actividades</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>{actCount || 0}</p>
-        </div>
+      <div className={styles.statsGrid}>
+        {stats.map((stat) => (
+          <div key={stat.label} className={`${styles.statCard} ${stat.alt ? styles.statCardAlt : ''}`}>
+            <p className={styles.statLabel}>{stat.label}</p>
+            <p className={styles.statValue}>{stat.value}</p>
+          </div>
+        ))}
+      </div>
 
-        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--color-border)' }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Total Inscripciones</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#16a34a' }}>{inscritosCount || 0}</p>
-        </div>
-
-        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--color-border)' }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Estudiantes Registrados</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--color-secondary)' }}>{usersCount || 0}</p>
+      <div className={styles.tableWrapper} style={{ padding: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--utn-dark)' }}>
+          Accesos rápidos
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+          {quickLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="btn btn-outline btn-sm"
+              style={{ textAlign: 'center' }}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
       </div>
     </div>

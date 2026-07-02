@@ -3,14 +3,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import styles from './HeroSlider.module.css';
 
-const images = [
-  { id: 1, src:"//www.utn.edu.ec/wp-content/uploads/2021/06/planta-central-utn.png", alt: 'Edificio Central' },
-  { id: 2, src: "//www.utn.edu.ec/wp-content/uploads/slider/cache/582999c6872cac31eb8bd19d3b1411af/planta-cental.jpg", alt: 'Edificio Central' },
-  { id: 3, src: "https://www.utn.edu.ec/wp-content/uploads/slider/cache/c8a3ff23710beddb36c5cea6593f42d1/posgrado2.jpg", alt: 'Postgrado' },
-  { id: 4, src: "https://www.utn.edu.ec/wp-content/uploads/slider/cache/88e33474650777c670250e56c3fdd8a9/biblioteca2.jpg", alt: 'Biblioteca' },
-];
+const DEFAULT_IMAGES = [
+  { id: 1, src: 'https://www.utn.edu.ec/wp-content/uploads/2021/06/planta-central-utn.png', alt: 'Edificio Central' },
+  { id: 2, src: 'https://www.utn.edu.ec/wp-content/uploads/slider/cache/582999c6872cac31eb8bd19d3b1411af/planta-cental.jpg', alt: 'Edificio Central' },
+  { id: 3, src: 'https://www.utn.edu.ec/wp-content/uploads/slider/cache/c8a3ff23710beddb36c5cea6593f42d1/posgrado2.jpg', alt: 'Postgrado' },
+  { id: 4, src: 'https://www.utn.edu.ec/wp-content/uploads/slider/cache/88e33474650777c670250e56c3fdd8a9/biblioteca2.jpg', alt: 'Biblioteca' },
+]
 
-export default function HeroSlider() {
+interface HeroSliderProps {
+  carruselUrls?: string[] | null
+}
+
+export default function HeroSlider({ carruselUrls }: HeroSliderProps = {}) {
+  const images = carruselUrls && carruselUrls.length > 0 
+    ? carruselUrls.map((url, i) => ({ id: i + 1, src: url, alt: `Carrusel ${i + 1}` }))
+    : DEFAULT_IMAGES;
+
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const nextSlide = useCallback(() => {
@@ -22,12 +30,11 @@ export default function HeroSlider() {
   }, []);
 
   useEffect(() => {
-    const slideInterval = setInterval(nextSlide, 6000);
-    return () => clearInterval(slideInterval);
-  }, [currentIndex, nextSlide]);
-
+    const slideInterval = setInterval(nextSlide, 6000)
+    return () => clearInterval(slideInterval)
+  }, [nextSlide])
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') nextSlide();
       if (e.key === 'ArrowLeft') prevSlide();
     };

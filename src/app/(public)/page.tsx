@@ -1,65 +1,98 @@
+import Link from 'next/link'
 import { supabaseAdmin as supabase } from '@/lib/supabase'
-import EventCard from '@/components/EventCard'
-import styles from './page.module.css'
+import { ACTIVIDADES_SELECT, getRutaImagenActividad } from '@/lib/actividad-archivos'
+import CarteleraSection from '@/components/CarteleraSection'
 import HeroSlider from '@/components/HeroSlider'
+import SidePanelActivos from '@/components/SidePanelActivos'
+import ScrollReveal from '@/components/ScrollReveal'
+import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  // Obtener actividades y sus archivos relacionados de Supabase
-  const { data: actividades, error } = await supabase
+  // 1. Últimos 4 eventos para el panel lateral izquierdo
+  const { data: recientes } = await supabase
     .from('actividades')
-    // AQUÍ ESTÁ EL CAMBIO CLAVE: Pedimos también la ruta del archivo
-    .select('*, archivos_actividades(ruta_archivo, tipo_archivo)')
+    .select(ACTIVIDADES_SELECT)
+    .eq('visible', true)
     .order('fecha_publicacion', { ascending: false })
-    .limit(9)
+    .limit(4)
+
+  // 2. Agenda completa para la cartelera inferior (últimas 12)
+  const { data: agendaMes, error: errorAgenda } = await supabase
+    .from('actividades')
+    .select(ACTIVIDADES_SELECT)
+    .eq('visible', true)
+    .order('fecha_publicacion', { ascending: false })
+    .limit(12)
+
+  // 3. Obtener configuración institucional (carrusel)
+  const { data: config } = await supabase
+    .from('informacion_institucional')
+    .select('carrusel_urls')
+    .limit(1)
+    .single()
 
   return (
     <>
-      {/* HERO SECTION */}
-      <HeroSlider />
-      
-      {/* ACTIVIDADES */}
-      <section id="actividades" className={`section ${styles.actividades}`}>
-        <div className="container">
-          <div className="section-title-accent"></div>
-          <h2 className="section-title">Noticias y Actividades</h2>
-          <p className="section-subtitle">
-            Mantente informado de las últimas novedades del Edificio Central
-          </p>
+      {/* ═══════════════════════════════════════════════════════════
+          RF01 — HERO SECTION: Panel Lateral + Carrusel Grande
+          ═══════════════════════════════════════════════════════════ */}
+      <section className={styles.heroSection}>
+        <div className={styles.heroLayout}>
+          {/* Izquierda: 4 últimos eventos con imagen y título */}
+          <div className={styles.panelWrapper}>
+            <SidePanelActivos items={recientes || []} />
+          </div>
+          {/* Derecha: Carrusel rotativo grande */}
+          <div className={styles.carouselWrapper}>
+            <HeroSlider carruselUrls={config?.carrusel_urls} />
+          </div>
+        </div>
+      </section>
 
-          {error && (
-            <div className={styles.errorMsg}>
-              <p>⚠️ Error al conectar con la base de datos. Verifica la configuración de Supabase.</p>
-              <code>{error.message}</code>
-            </div>
-          )}
 
-          {!error && actividades && actividades.length > 0 ? (
-            <div className="grid-3">
-              {actividades.map((act) => (
-                <EventCard
-                  key={act.id_actividad}
-                  id={act.id_actividad}
-                  titulo={act.titulo}
-                  descripcion={act.descripcion}
-                  tipo={act.tipo}
-                  fecha_publicacion={act.fecha_publicacion}
-                  fecha_limite_inscripcion={act.fecha_limite_inscripcion}
-                  
-                  imagenUrl={act.archivos_actividades?.[0]?.ruta_archivo || null}
-                />
-              ))}
-            </div>
-          ) : !error ? (
+
+      {/* ═══════════════════════════════════════════════════════════
+          RF01 (Parte 2) — CARTELERA: Agenda del mes en tarjetas
+          ═══════════════════════════════════════════════════════════ */}
+      {!errorAgenda && agendaMes && agendaMes.length > 0 ? (
+        <CarteleraSection
+          actividades={agendaMes.map((act) => ({
+            id_actividad: act.id_actividad,
+            titulo: act.titulo,
+            descripcion: act.descripcion,
+            tipo: act.tipo,
+            fecha_publicacion: act.fecha_publicacion,
+            fecha_limite_inscripcion: act.fecha_limite_inscripcion,
+            url_imagen: getRutaImagenActividad(act),
+          }))}
+        />
+      ) : !errorAgenda ? (
+        <section id="actividades" className={styles.cartelera}>
+          <div className={styles.carteleraContainer}>
             <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>📭</span>
+              <span className={styles.emptyIcon}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"/>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </span>
               <h3>No hay actividades publicadas</h3>
               <p>Cuando el administrador FEUE publique eventos o anuncios, aparecerán aquí.</p>
             </div>
-          ) : null}
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : (
+        <section id="actividades" className={styles.cartelera}>
+          <div className={styles.carteleraContainer}>
+            <div className={styles.errorMsg}>
+              <p>⚠️ Error al conectar con la base de datos.</p>
+              <code>{errorAgenda.message}</code>
+            </div>
+          </div>
+        </section>
+      )}
     </>
   )
 }

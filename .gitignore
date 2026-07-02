@@ -37,9 +37,15 @@ yarn-error.log*
 .env.local
 
 
-# vercel
-.vercel
+# uploads de comentarios (archivos subidos en runtime)
+/public/uploads/comentarios/*
+!/public/uploads/comentarios/.gitkeep
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Documentos
+*.docx
+
+*.sql

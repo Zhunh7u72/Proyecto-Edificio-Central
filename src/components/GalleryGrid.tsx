@@ -1,0 +1,85 @@
+'use client'
+
+import { useState } from 'react'
+import type { FotoGaleria } from '@/lib/types/public-media'
+import styles from './GalleryGrid.module.css'
+
+export default function GalleryGrid({ fotos }: { fotos: FotoGaleria[] }) {
+  const [selected, setSelected] = useState<FotoGaleria | null>(null)
+
+  if (fotos.length === 0) {
+    return (
+      <div className={styles.empty}>
+        <span className={styles.emptyIcon}>📷</span>
+        <h3>No hay fotografías publicadas</h3>
+        <p>Las imágenes de actividades y galerías aparecerán aquí cuando el administrador las publique.</p>
+      </div>
+    )
+  }
+
+  const actividadFotos = fotos.filter((f) => f.fuente === 'actividad')
+  const carreraFotos = fotos.filter((f) => f.fuente === 'carrera')
+
+  return (
+    <>
+      {actividadFotos.length > 0 && (
+        <section className={styles.section}>
+          <div className="section-title-accent" />
+          <h2 className="section-title">Fotografías de actividades</h2>
+          <p className="section-subtitle">Imágenes de anuncios, eventos y capacitaciones del Edificio Central</p>
+          <div className={styles.grid}>
+            {actividadFotos.map((foto) => (
+              <GalleryItem key={foto.id} foto={foto} onSelect={setSelected} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {carreraFotos.length > 0 && (
+        <section className={styles.section}>
+          <div className="section-title-accent" />
+          <h2 className="section-title">Galería institucional</h2>
+          <p className="section-subtitle">Fotografías de carreras y asociaciones estudiantiles</p>
+          <div className={styles.grid}>
+            {carreraFotos.map((foto) => (
+              <GalleryItem key={foto.id} foto={foto} onSelect={setSelected} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {selected && (
+        <div className={styles.lightbox} onClick={() => setSelected(null)} role="dialog" aria-modal="true">
+          <div className={styles.lightboxContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.lightboxClose} onClick={() => setSelected(null)} aria-label="Cerrar">
+              ×
+            </button>
+            <img src={selected.ruta} alt={selected.titulo} className={styles.lightboxImage} />
+            <div className={styles.lightboxCaption}>
+              <strong>{selected.titulo}</strong>
+              {selected.subtitulo && <span>{selected.subtitulo}</span>}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function GalleryItem({
+  foto,
+  onSelect,
+}: {
+  foto: FotoGaleria
+  onSelect: (foto: FotoGaleria) => void
+}) {
+  return (
+    <button type="button" className={styles.item} onClick={() => onSelect(foto)}>
+      <img src={foto.ruta} alt={foto.titulo} className={styles.image} loading="lazy" />
+      <div className={styles.caption}>
+        <span className={styles.captionTitle}>{foto.titulo}</span>
+        {foto.subtitulo && <span className={styles.captionSub}>{foto.subtitulo}</span>}
+      </div>
+    </button>
+  )
+}

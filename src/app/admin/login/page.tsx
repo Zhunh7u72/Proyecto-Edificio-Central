@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { login } from '@/app/actions/auth'
+import LoadingOverlay from '@/components/LoadingOverlay'
 import Link from 'next/link'
 import styles from './page.module.css'
 
@@ -10,6 +11,7 @@ export default function LoginPage() {
 
   return (
     <div className={styles.loginWrapper}>
+      <LoadingOverlay show={isPending} />
       <div className={styles.loginContainer}>
         <div className={styles.loginHeader}>
           <img 
@@ -35,7 +37,8 @@ export default function LoginPage() {
               id="correo" 
               name="correo" 
               className="form-input" 
-              placeholder="Correo"
+              placeholder="admin@utn.edu.ec"
+              defaultValue="admin@utn.edu.ec"
               required 
             />
           </div>

@@ -1,15 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Open+Sans:wght@400;600;700&display=swap');
 
-/* ====================================================================
-   DESIGN SYSTEM — Edificio Central UTN
-   Paleta inspirada en utn.edu.ec
-   ==================================================================== */
-
 :root {
+  /* Paleta institucional UTN — Pantone oficial */
+  --utn-red: #d20a11;        /* Pantone Rojo principal RGB: 209,10,17 */
+  --utn-red-hover: #a1080d;  /* Rojo oscuro para hover */
+  --utn-dark: #3a3939;
+  --utn-gray: #706f6f;       /* Pantone Gris RGB: 112,111,111 */
+  --utn-light: #f4f6f9;
+
   /* Colores principales UTN (Paleta Exacta) */
-  --color-primary: #3a3939;
-  --color-primary-dark: #8c0000;
-  --color-primary-light: #d10a11;
+  --color-primary: var(--utn-red);
+  --color-primary-dark: var(--utn-red-hover);
+  --color-primary-light: #e60000;
   --color-secondary: #212529; /* Usando Negro/Gris Carbón como color secundario principal */
   --color-secondary-dark: #121416;
   --color-secondary-light: #343a40;
@@ -46,16 +48,16 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
 
-  /* Sombras */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
-  --shadow-xl: 0 12px 40px rgba(0,0,0,0.16);
+  /* Sombras Premium */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.12);
+  --shadow-xl: 0 24px 60px rgba(0,0,0,0.15);
 
   /* Transiciones */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 400ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Contenedor */
   --container-width: 1200px;
@@ -228,8 +230,8 @@ button {
 
 .form-input:focus {
   outline: none;
-  border-color: var(--color-secondary);
-  box-shadow: 0 0 0 3px rgba(9, 83, 151, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(210, 10, 17, 0.15);
 }
 
 .form-input::placeholder {
@@ -371,8 +373,8 @@ button {
 }
 
 .badge-evento {
-  background: #706f6f;;
-  color: var(--color-secondary);
+  background: rgba(112, 111, 111, 0.12);
+  color: var(--utn-gray);
 }
 
 .badge-anuncio {
