@@ -13,12 +13,29 @@ export default function InscripcionesClient({
   dbError?: string | null
 }) {
   const [filtroTipo, setFiltroTipo] = useState('')
+  const [busqueda, setBusqueda] = useState('')
   const [descargando, setDescargando] = useState<string | null>(null)
 
   const filtradas = useMemo(() => {
-    if (!filtroTipo) return inscripciones
-    return inscripciones.filter((i) => i.actividades?.tipo === filtroTipo)
-  }, [inscripciones, filtroTipo])
+    const texto = busqueda.trim().toLowerCase()
+
+    return inscripciones.filter((i) => {
+      const cumpleTipo = !filtroTipo || i.actividades?.tipo === filtroTipo
+      if (!cumpleTipo) return false
+
+      if (!texto) return true
+
+      const nombreCompleto = `${i.usuarios?.nombres ?? ''} ${i.usuarios?.apellidos ?? ''}`.toLowerCase()
+      const correo = (i.usuarios?.correo ?? '').toLowerCase()
+      const actividad = (i.actividades?.titulo ?? '').toLowerCase()
+
+      return (
+        nombreCompleto.includes(texto) ||
+        correo.includes(texto) ||
+        actividad.includes(texto)
+      )
+    })
+  }, [inscripciones, filtroTipo, busqueda])
 
   const handleDescargarPdf = (ruta: string) => {
     setDescargando(ruta)
@@ -57,20 +74,32 @@ export default function InscripcionesClient({
       </div>
 
       <div className={styles.toolbar}>
-        <label className={styles.filterLabel}>
-          Filtrar por tipo:
-          <select
-            className="form-input"
-            style={{ width: 'auto', minWidth: '180px', marginLeft: '0.5rem' }}
-            value={filtroTipo}
-            onChange={(e) => setFiltroTipo(e.target.value)}
-          >
-            <option value="">Todas</option>
-            <option value="Anuncio">Anuncios</option>
-            <option value="Evento">Eventos</option>
-            <option value="Capacitacion">Capacitaciones</option>
-          </select>
-        </label>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>
+            <span>Filtrar por tipo:</span>
+            <select
+              className="form-input"
+              value={filtroTipo}
+              onChange={(e) => setFiltroTipo(e.target.value)}
+            >
+              <option value="">Todas</option>
+              <option value="Anuncio">Anuncios</option>
+              <option value="Evento">Eventos</option>
+              <option value="Capacitacion">Capacitaciones</option>
+            </select>
+          </label>
+
+          <label className={styles.filterLabel}>
+            <span>Buscar:</span>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Estudiante, actividad o correo"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
+          </label>
+        </div>
         <span className={styles.filterCount}>{filtradas.length} inscripción(es)</span>
       </div>
 

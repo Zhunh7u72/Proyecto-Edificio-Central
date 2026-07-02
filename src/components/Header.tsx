@@ -7,9 +7,10 @@ import styles from './Header.module.css'
 
 interface HeaderProps {
   logoUrl?: string | null
+  isAuthenticated?: boolean
 }
 
-export default function Header({ logoUrl }: HeaderProps = {}) {
+export default function Header({ logoUrl, isAuthenticated = false }: HeaderProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [feueOpen, setFeueOpen] = useState(false)
 
@@ -17,6 +18,9 @@ export default function Header({ logoUrl }: HeaderProps = {}) {
     setMenuOpen(false)
     setFeueOpen(false)
   }
+
+  const adminLinkHref = isAuthenticated ? '/admin/dashboard' : '/admin/login'
+  const adminLinkLabel = isAuthenticated ? 'Gestionar' : 'LOGIN'
 
   return (
     <header className={styles.header}>
@@ -99,7 +103,7 @@ export default function Header({ logoUrl }: HeaderProps = {}) {
             </li>
 
             <li>
-              <Link href="/admin/login" onClick={closeMenu}>Login</Link>
+              <Link href={adminLinkHref} onClick={closeMenu}>{adminLinkLabel}</Link>
             </li>
           </ul>
         </div>

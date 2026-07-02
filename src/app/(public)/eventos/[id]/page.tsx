@@ -1,8 +1,4 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase'
-import { ACTIVIDADES_SELECT, getRutasImagenesActividad } from '@/lib/actividad-archivos'
-import { fetchComentariosActividad } from '@/lib/comentarios-query'
-import CommentsSection from '@/components/CommentsSection'
-import ActivityImageCarousel from '@/components/ActivityImageCarousel'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import EnrollForm from '@/components/EnrollForm'
@@ -20,9 +16,8 @@ export default async function EventPage({ params }: EventPageProps) {
   // Obtener actividad
   const { data: actividad, error } = await supabase
     .from('actividades')
-    .select(`${ACTIVIDADES_SELECT}, usuarios(nombres, apellidos)`)
+    .select('*, usuarios(nombres, apellidos)')
     .eq('id_actividad', parseInt(id))
-    .eq('visible', true)
     .single()
 
   if (error || !actividad) {
@@ -32,21 +27,16 @@ export default async function EventPage({ params }: EventPageProps) {
   // Obtener inscritos (solo cuenta)
   const { count: inscritosCount } = await supabase
     .from('matriculas_eventos')
-    .select('id_matricula', { count: 'exact', head: true })
+    .select('*', { count: 'exact', head: true })
     .eq('id_actividad', actividad.id_actividad)
 
   const fechaPub = new Date(actividad.fecha_publicacion).toLocaleDateString('es-EC', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   })
   
-  const esInscripcionAbierta = actividad.fecha_fin && new Date() <= new Date(actividad.fecha_fin)
-  const imagenes = getRutasImagenesActividad(actividad)
-
-  const autorRaw = actividad.usuarios as { nombres: string; apellidos: string } | { nombres: string; apellidos: string }[] | null
-  const autor = Array.isArray(autorRaw) ? autorRaw[0] : autorRaw
-
-  const { comentarios } = await fetchComentariosActividad(actividad.id_actividad)
-    return (
+  const esInscripcionAbierta = actividad.fecha_limite_inscripcion && new Date() <= new Date(actividad.fecha_limite_inscripcion)
+  
+  return (
     <div className={styles.pageWrapper}>
       {/* HEADER DE LA ACTIVIDAD */}
       <div className={styles.header}>
@@ -57,16 +47,13 @@ export default async function EventPage({ params }: EventPageProps) {
             <span className={styles.date}>Publicado el {fechaPub}</span>
           </div>
           <h1 className={styles.title}>{actividad.titulo}</h1>
-          <p className={styles.author}>Publicado por: {autor?.nombres} {autor?.apellidos}</p>
+          <p className={styles.author}>Publicado por: {actividad.usuarios?.nombres} {actividad.usuarios?.apellidos}</p>
         </div>
       </div>
 
       <div className={`container ${styles.contentGrid}`}>
         {/* COLUMNA PRINCIPAL */}
         <div className={styles.mainCol}>
-          {imagenes && imagenes.length > 0 && (
-            <ActivityImageCarousel images={imagenes} title={actividad.titulo} />
-          )}
           <div className={styles.contentBox}>
             <h3 className={styles.sectionTitle}>Detalles de la Actividad</h3>
             <div className={styles.description}>
@@ -78,11 +65,10 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
           </div>
           
+          {/* Aquí iría la sección de Comentarios y Archivos según el diseño */}
           <div className={styles.contentBox} style={{ marginTop: '2rem' }}>
-            <CommentsSection
-              idActividad={actividad.id_actividad}
-              comentarios={comentarios}
-            />
+            <h3 className={styles.sectionTitle}>Material y Comentarios</h3>
+            <p style={{ color: 'var(--color-text-muted)' }}>Módulo en construcción...</p>
           </div>
         </div>
 
@@ -94,11 +80,11 @@ export default async function EventPage({ params }: EventPageProps) {
               <li>
                 <strong>Total Inscritos:</strong> {inscritosCount || 0}
               </li>
-              {actividad.fecha_fin ? (
+              {actividad.fecha_limite_inscripcion ? (
                 <li>
-                  <strong>Cierre de evento e inscripción:</strong><br />
+                  <strong>Cierre de inscripción:</strong><br />
                   <span className={esInscripcionAbierta ? styles.openText : styles.closedText}>
-                    {new Date(actividad.fecha_fin).toLocaleDateString('es-EC', {
+                    {new Date(actividad.fecha_limite_inscripcion).toLocaleDateString('es-EC', {
                       day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute:'2-digit'
                     })}
                   </span>
@@ -106,7 +92,9 @@ export default async function EventPage({ params }: EventPageProps) {
               ) : (
                 <li>
                   <strong>Estado:</strong><br />
-                  <span className={styles.openText}>Libre / No requiere inscripción previa estricta</span>
+                  <span className={styles.openText}>
+                    Libre / No requiere inscripción previa estricta
+                  </span>
                 </li>
               )}
             </ul>
@@ -114,7 +102,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Formulario de inscripción */}
           <div className={styles.formWrapper}>
-            {esInscripcionAbierta || !actividad.fecha_fin ? (
+            {esInscripcionAbierta || !actividad.fecha_limite_inscripcion ? (
               <EnrollForm idActividad={actividad.id_actividad} />
             ) : (
               <div className={styles.closedMessage}>
