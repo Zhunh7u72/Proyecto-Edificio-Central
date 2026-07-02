@@ -18,7 +18,7 @@ export async function fetchFotosGaleria() {
   const [actividadesRes, carrerasRes] = await Promise.all([
     supabaseAdmin
       .from('archivos_actividades')
-      .select('id_archivo_activi, ruta_archivo, actividades(titulo, tipo)')
+      .select('id_archivo_activi, id_actividad, ruta_archivo, actividades(titulo, tipo)')
       .eq('tipo_archivo', TIPO_ARCHIVO_FOTO)
       .order('id_archivo_activi', { ascending: false }),
     supabaseAdmin
@@ -38,6 +38,7 @@ export async function fetchFotosGaleria() {
       titulo: act?.titulo ?? 'Actividad',
       subtitulo: act?.tipo ?? undefined,
       fuente: 'actividad',
+      id_actividad: row.id_actividad ?? undefined,
     })
   }
 

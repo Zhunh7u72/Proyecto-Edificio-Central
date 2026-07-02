@@ -13,10 +13,23 @@ export type ActividadConArchivos = {
   archivos_actividades?: ArchivoActividad[] | null
 }
 
+export function esFotoMemoria(ruta: string): boolean {
+  return /memoria-\d+-/i.test(ruta)
+}
+
 export function getRutaImagenActividad(actividad: ActividadConArchivos): string | null {
   const archivos = actividad.archivos_actividades ?? []
-  const foto = archivos.find((a) => a.tipo_archivo === TIPO_ARCHIVO_FOTO)
+  const foto = archivos.find(
+    (a) => a.tipo_archivo === TIPO_ARCHIVO_FOTO && !esFotoMemoria(a.ruta_archivo)
+  )
   return foto?.ruta_archivo ?? null
+}
+
+export function getRutasFotosMemoria(actividad: ActividadConArchivos): string[] {
+  const archivos = actividad.archivos_actividades ?? []
+  return archivos
+    .filter((a) => a.tipo_archivo === TIPO_ARCHIVO_FOTO && esFotoMemoria(a.ruta_archivo))
+    .map((a) => a.ruta_archivo)
 }
 
 export function getRutasImagenesActividad(actividad: ActividadConArchivos): string[] {

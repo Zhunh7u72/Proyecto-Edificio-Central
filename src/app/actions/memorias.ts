@@ -2,13 +2,14 @@
 
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-admin'
+import { TIPO_ARCHIVO_FOTO } from '@/lib/archivo-constants'
 import { revalidatePath } from 'next/cache'
 
 export type MemoriaState = { error?: string; success?: string } | undefined
 
 /**
  * Guarda múltiples fotografías y un texto resumen para una actividad concluida.
- * Las fotos se registran en archivos_actividades (tipo = 'foto').
+ * Las fotos se registran en archivos_actividades (tipo = 'Fotografia').
  */
 export async function guardarMemoriaActividad(
   state: MemoriaState,
@@ -21,23 +22,26 @@ export async function guardarMemoriaActividad(
 
   if (!id_actividad) return { error: 'Actividad inválida.' }
 
-  // Guardar el resumen actualizando la descripción (o puedes crear un campo separado)
-  if (resumen) {
-    const { error: descErr } = await supabaseAdmin
-      .from('actividades')
-      .update({ descripcion: resumen })
-      .eq('id_actividad', id_actividad)
-    if (descErr) return { error: 'Error al guardar el resumen: ' + descErr.message }
+  const fotosFiles = formData.getAll('fotos_archivos') as File[]
+  const validFiles = fotosFiles.filter((f) => f.size > 0)
+
+  if (!resumen) {
+    return { error: 'Debes escribir el resumen del evento antes de guardar la memoria.' }
   }
 
-  // Procesar archivos subidos
-  const fotosFiles = formData.getAll('fotos_archivos') as File[]
-  const validFiles = fotosFiles.filter(f => f.size > 0)
-  
-  if (validFiles.length > 0) {
-    const urls: string[] = []
-    
-    for (const file of validFiles) {
+  if (validFiles.length === 0) {
+    return { error: 'Debes seleccionar al menos una fotografía de evidencia.' }
+  }
+
+  const { error: descErr } = await supabaseAdmin
+    .from('actividades')
+    .update({ descripcion: resumen })
+    .eq('id_actividad', id_actividad)
+  if (descErr) return { error: 'Error al guardar el resumen: ' + descErr.message }
+
+  const urls: string[] = []
+
+  for (const file of validFiles) {
       const extension = file.name.split('.').pop()
       const safeName = `memoria-${id_actividad}-${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
       
@@ -51,20 +55,21 @@ export async function guardarMemoriaActividad(
       }
     }
 
-    if (urls.length > 0) {
-      const inserts = urls.map((url) => ({
-        id_actividad,
-        ruta_archivo: url,
-        tipo_archivo: 'foto',
-      }))
-
-      const { error: fotosErr } = await supabaseAdmin
-        .from('archivos_actividades')
-        .insert(inserts)
-
-      if (fotosErr) return { error: 'Error al guardar las referencias de fotos: ' + fotosErr.message }
-    }
+  if (urls.length === 0) {
+    return { error: 'No se pudieron subir las fotografías. Verifica el formato e intenta de nuevo.' }
   }
+
+  const inserts = urls.map((url) => ({
+    id_actividad,
+    ruta_archivo: url,
+    tipo_archivo: TIPO_ARCHIVO_FOTO,
+  }))
+
+  const { error: fotosErr } = await supabaseAdmin
+    .from('archivos_actividades')
+    .insert(inserts)
+
+  if (fotosErr) return { error: 'Error al guardar las referencias de fotos: ' + fotosErr.message }
 
   revalidatePath('/admin/actividades')
   revalidatePath(`/eventos/${id_actividad}`)

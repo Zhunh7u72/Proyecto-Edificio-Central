@@ -122,7 +122,7 @@ export default function ActividadesClient({ actividades, comentariosPorActividad
             {state?.error && <div className="form-error" style={{ marginBottom: '1rem' }}>{state.error}</div>}
             {state?.success && <div className="form-success" style={{ marginBottom: '1rem' }}>{state.success}</div>}
 
-            <form action={action}>
+            <form action={action} encType="multipart/form-data">
               <div className="form-group">
                 <label className="form-label">Título</label>
                 <input type="text" name="titulo" className="form-input" required />
@@ -130,6 +130,18 @@ export default function ActividadesClient({ actividades, comentariosPorActividad
               <div className="form-group">
                 <label className="form-label">Descripción</label>
                 <textarea name="descripcion" className="form-input" rows={4}></textarea>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Fotografía de portada</label>
+                <input
+                  type="file"
+                  name="archivos"
+                  className="form-input"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                />
+                <small style={{ color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                  Imagen principal del evento para la cartelera y tarjetas (máx. 5 MB).
+                </small>
               </div>
               <div className="form-group">
                 <label className="form-label">Tipo de Actividad</label>
