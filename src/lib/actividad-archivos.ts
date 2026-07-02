@@ -1,7 +1,8 @@
 import 'server-only'
 import { query } from '@/lib/db'
-import { saveLocalFile } from '@/lib/storage'
-import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
+import { saveLocalFile, deleteLocalFile } from '@/lib/storage'
+import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF, MAX_IMAGEN_BYTES } from '@/lib/archivo-constants'
+import { validarArchivoImagen } from '@/lib/validar-contenido-archivo'
 
 export { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
 export interface ArchivoActividad {
@@ -14,10 +15,23 @@ export type ActividadConArchivos = {
   archivos_actividades?: ArchivoActividad[] | null
 }
 
+export function esFotoMemoria(ruta: string): boolean {
+  return /memoria-\d+-/i.test(ruta)
+}
+
 export function getRutaImagenActividad(actividad: ActividadConArchivos): string | null {
   const archivos = actividad.archivos_actividades ?? []
-  const foto = archivos.find((a) => a.tipo_archivo === TIPO_ARCHIVO_FOTO)
+  const foto = archivos.find(
+    (a) => a.tipo_archivo === TIPO_ARCHIVO_FOTO && !esFotoMemoria(a.ruta_archivo)
+  )
   return foto?.ruta_archivo ?? null
+}
+
+export function getRutasFotosMemoria(actividad: ActividadConArchivos): string[] {
+  const archivos = actividad.archivos_actividades ?? []
+  return archivos
+    .filter((a) => a.tipo_archivo === TIPO_ARCHIVO_FOTO && esFotoMemoria(a.ruta_archivo))
+    .map((a) => a.ruta_archivo)
 }
 
 export function getRutasImagenesActividad(actividad: ActividadConArchivos): string[] {
@@ -35,21 +49,15 @@ export function mapActividadConImagen<T extends ActividadConArchivos>(actividad:
   }
 }
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+const MAX_FILE_BYTES = MAX_IMAGEN_BYTES
 
 export async function guardarArchivoActividad(file: File, id_actividad: number): Promise<{ ruta: string; tipo: string } | { error: string }> {
-  if (file.size > MAX_FILE_BYTES) {
-    return { error: 'Las imágenes no pueden superar 5 MB.' }
-  }
-  
-  if (!file.type.startsWith('image/') && !ALLOWED_IMAGE_TYPES.has(file.type) && !/\.(jpe?g|png|gif|webp)$/i.test(file.name)) {
-    return { error: 'Solo se permiten imágenes (JPG, PNG, GIF, WEBP).' }
-  }
+  const validacion = await validarArchivoImagen(file, MAX_FILE_BYTES)
+  if ('error' in validacion) return { error: validacion.error }
 
   const extension = file.name.split('.').pop()
   const safeName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
-  const storagePath = `actividades/${id_actividad}/${safeName}`
+  const storagePath = `imagenes/${safeName}`
 
   let localRuta = ''
   try {
@@ -74,6 +82,10 @@ export async function syncImagenActividad(
   if (archivosValidos.length === 0) return {}
 
   try {
+    const viejasFotos = await query('SELECT ruta_archivo FROM archivos_actividades WHERE id_actividad = $1 AND tipo_archivo = $2', [id_actividad, TIPO_ARCHIVO_FOTO])
+    for (const f of viejasFotos.rows) {
+      if (f.ruta_archivo) await deleteLocalFile(f.ruta_archivo.replace('/uploads/', ''))
+    }
     await query('DELETE FROM archivos_actividades WHERE id_actividad = $1 AND tipo_archivo = $2', [id_actividad, TIPO_ARCHIVO_FOTO])
   } catch (deleteError: any) {
     return { error: 'Error al limpiar imágenes anteriores: ' + deleteError.message }
@@ -98,6 +110,10 @@ export async function syncImagenActividad(
 
 export async function eliminarArchivosActividad(id_actividad: number) {
   try {
+    const archivos = await query('SELECT ruta_archivo FROM archivos_actividades WHERE id_actividad = $1', [id_actividad])
+    for (const a of archivos.rows) {
+      if (a.ruta_archivo) await deleteLocalFile(a.ruta_archivo.replace('/uploads/', ''))
+    }
     await query('DELETE FROM archivos_actividades WHERE id_actividad = $1', [id_actividad])
   } catch (e) {
     console.error(e)
@@ -130,6 +146,20 @@ export async function eliminarDependenciasActividad(id_actividad: number) {
   }
 
   await eliminarArchivosActividad(id_actividad)
+}
+
+export async function eliminarArchivoActividadIndividual(id_archivo_activi: number): Promise<{ success?: string, error?: string }> {
+  try {
+    const res = await query('SELECT ruta_archivo FROM archivos_actividades WHERE id_archivo_activi = $1', [id_archivo_activi])
+    if (res.rows.length > 0 && res.rows[0].ruta_archivo) {
+      await deleteLocalFile(res.rows[0].ruta_archivo.replace('/uploads/', ''))
+      await query('DELETE FROM archivos_actividades WHERE id_archivo_activi = $1', [id_archivo_activi])
+      return { success: 'Archivo eliminado' }
+    }
+    return { error: 'Archivo no encontrado' }
+  } catch (error: any) {
+    return { error: error.message }
+  }
 }
 
 export const ACTIVIDADES_COLUMNS =

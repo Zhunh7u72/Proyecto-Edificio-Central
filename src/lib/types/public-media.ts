@@ -4,6 +4,7 @@ export type FotoGaleria = {
   titulo: string
   subtitulo?: string
   fuente: 'actividad' | 'carrera'
+  id_actividad?: number
 }
 
 export type DocumentoPublico = {

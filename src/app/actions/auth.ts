@@ -4,14 +4,15 @@ import { query } from '@/lib/db'
 import { createSession, deleteSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import bcrypt from 'bcryptjs'
+import { parseCorreo, sanitizarTexto } from '@/lib/validar-input'
 
 export type LoginState = {
   error?: string
 } | undefined
 
 export async function login(state: LoginState, formData: FormData): Promise<LoginState> {
-  const correo = formData.get('correo') as string
-  const password = formData.get('password') as string
+  const correo = parseCorreo(formData.get('correo'))
+  const password = sanitizarTexto(formData.get('password'), 128)
 
   if (!correo || !password) {
     return { error: 'Correo y contraseña son obligatorios.' }

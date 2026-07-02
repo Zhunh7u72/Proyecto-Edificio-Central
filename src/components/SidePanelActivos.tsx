@@ -7,6 +7,7 @@ interface Activity extends ActividadConArchivos {
   titulo: string
   tipo: string
   fecha_fin?: string | null
+  url_imagen?: string | null
 }
 
 export default function SidePanelActivos({ items }: { items: Activity[] }) {
@@ -30,7 +31,7 @@ export default function SidePanelActivos({ items }: { items: Activity[] }) {
           <p className={styles.empty}>No hay eventos recientes en este momento.</p>
         ) : (
           items.slice(0, 4).map((item) => {
-            const imagen = getRutaImagenActividad(item)
+            const imagen = item.url_imagen || getRutaImagenActividad(item)
             return (
               <Link key={item.id_actividad} href={`/eventos/${item.id_actividad}`} className={styles.card}>
                 <div className={styles.cardImageWrapper}>

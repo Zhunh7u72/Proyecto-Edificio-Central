@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { publicarComentario } from '@/app/actions/comentarios'
 import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF, nombreArchivoDesdeRuta } from '@/lib/archivo-constants'
@@ -16,31 +16,20 @@ interface CommentsSectionProps {
 export default function CommentsSection({ idActividad, comentarios }: CommentsSectionProps) {
   const router = useRouter()
   const [state, action, isPending] = useActionState(publicarComentario, undefined)
-  const [fileName, setFileName] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     if (state?.success) {
       formRef.current?.reset()
-      setFileName(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
       router.refresh()
     }
   }, [state?.success, router])
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    setFileName(file ? file.name : null)
-  }
 
   return (
     <div className={styles.section}>
       <LoadingOverlay show={isPending} />
       <h3 className={styles.title}>Comentarios</h3>
-      <p className={styles.subtitle}>
-        Participa en la conversación y adjunta imágenes o PDF si lo necesitas.
-      </p>
+      <p className={styles.subtitle}>Participa en la conversación sobre esta actividad.</p>
 
       {comentarios.length === 0 ? (
         <p className={styles.empty}>Sé el primero en comentar esta publicación.</p>
@@ -114,27 +103,6 @@ export default function CommentsSection({ idActividad, comentarios }: CommentsSe
               placeholder="Escribe tu comentario o respuesta..."
               required
             />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Archivo adjunto (opcional)</label>
-            <div className={styles.fileRow}>
-              <label className={styles.fileButton}>
-                Seleccionar archivo
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  name="archivo"
-                  accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.pdf"
-                  className={styles.fileInput}
-                  onChange={handleFileChange}
-                />
-              </label>
-              <span className={styles.fileName}>
-                {fileName ?? 'Ningún archivo seleccionado'}
-              </span>
-            </div>
-            <p className={styles.fileHint}>Imágenes o PDF, máximo 5 MB.</p>
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={isPending}>

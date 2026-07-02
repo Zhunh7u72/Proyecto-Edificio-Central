@@ -5,12 +5,14 @@ import {
   crearActividad,
   actualizarActividad,
   eliminarActividad,
+  eliminarArchivoActividadAction
 } from '@/app/actions/actividades'
 import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
 import AdminComentariosModal from '@/components/admin/AdminComentariosModal'
 import LoadingOverlay from '@/components/LoadingOverlay'
+import { ACCEPT_SOLO_IMAGENES, ETIQUETA_FORMATOS_IMAGEN } from '@/lib/archivo-constants'
 import styles from './admin.module.css'
 
 interface ActividadCrudProps {
@@ -61,6 +63,8 @@ export default function ActividadCrud({
   const action = editing ? updateAction : createAction
   const isPending = editing ? updatePending : createPending
 
+  const [refreshKey, setRefreshKey] = useState(0) // Used to force refresh when an image is deleted
+
   const wasPendingRef = useRef(false)
 
   useEffect(() => {
@@ -89,6 +93,17 @@ export default function ActividadCrud({
   const handleDelete = async (id: number) => {
     if (confirm(`¿Eliminar este ${tipo.toLowerCase()}?`)) {
       await eliminarActividad(id)
+    }
+  }
+
+  const handleDeletePhoto = async (idArchivo: number) => {
+    if (confirm('¿Borrar esta imagen permanentemente del servidor?')) {
+      const res = await eliminarArchivoActividadAction(idArchivo)
+      if (res.error) alert(res.error)
+      else {
+        alert(res.success)
+        closeModal()
+      }
     }
   }
 
@@ -131,47 +146,47 @@ export default function ActividadCrud({
               actividades.map((act) => {
                 const comentarios = comentariosPorActividad[act.id_actividad] ?? []
                 return (
-                <tr key={act.id_actividad}>
-                  <td>
-                    {act.url_imagen ? (
-                      <img src={act.url_imagen} alt="" className={styles.thumb} />
-                    ) : (
-                      <div className={styles.thumbPlaceholder}>📷</div>
-                    )}
-                  </td>
-                  <td><strong>{act.titulo}</strong></td>
-                  <td>
-                    {getFechaInicio(act)
-                      ? new Date(getFechaInicio(act)!).toLocaleDateString('es-EC')
-                      : '—'}
-                  </td>
-                  <td>
-                    {getFechaFin(act)
-                      ? new Date(getFechaFin(act)!).toLocaleDateString('es-EC')
-                      : '—'}
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className={styles.btnView}
-                      onClick={() =>
-                        setComentariosView({ titulo: act.titulo, comentarios })
-                      }
-                    >
-                      Ver ({comentarios.length})
-                    </button>
-                  </td>
-                  <td>
-                    <div className={styles.actions}>
-                      <button className={styles.btnEdit} onClick={() => openEdit(act)}>
-                        Editar
+                  <tr key={act.id_actividad}>
+                    <td>
+                      {act.url_imagen ? (
+                        <img src={act.url_imagen} alt="" className={styles.thumb} />
+                      ) : (
+                        <div className={styles.thumbPlaceholder}>📷</div>
+                      )}
+                    </td>
+                    <td><strong>{act.titulo}</strong></td>
+                    <td>
+                      {getFechaInicio(act)
+                        ? new Date(getFechaInicio(act)!).toLocaleDateString('es-EC')
+                        : '—'}
+                    </td>
+                    <td>
+                      {getFechaFin(act)
+                        ? new Date(getFechaFin(act)!).toLocaleDateString('es-EC')
+                        : '—'}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className={styles.btnView}
+                        onClick={() =>
+                          setComentariosView({ titulo: act.titulo, comentarios })
+                        }
+                      >
+                        Ver ({comentarios.length})
                       </button>
-                      <button className={styles.btnDelete} onClick={() => handleDelete(act.id_actividad)}>
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                    <td>
+                      <div className={styles.actions}>
+                        <button className={styles.btnEdit} onClick={() => openEdit(act)}>
+                          Editar
+                        </button>
+                        <button className={styles.btnDelete} onClick={() => handleDelete(act.id_actividad)}>
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 )
               })
             )}
@@ -220,14 +235,31 @@ export default function ActividadCrud({
 
                 <div className={`form-group ${styles.formGridFull}`}>
                   <label className="form-label">Foto / Imágenes</label>
+                  {editing && editing.archivos_actividades && editing.archivos_actividades.length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                      {editing.archivos_actividades.map(archivo => (
+                        <div key={archivo.id_archivo_activi} style={{ position: 'relative', width: '100px', height: '100px', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden' }}>
+                          <img src={archivo.ruta_archivo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePhoto(archivo.id_archivo_activi!)}
+                            style={{ position: 'absolute', top: 4, right: 4, background: 'var(--color-danger)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                            title="Eliminar imagen"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <input
                     type="file"
                     name="archivos"
                     className="form-input"
-                    accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp"
+                    accept={ACCEPT_SOLO_IMAGENES}
                     multiple
                   />
-                  <small className={styles.fileHint}>Puedes subir varias fotos (max 5MB c/u)</small>
+                  <small className={styles.fileHint}>Solo {ETIQUETA_FORMATOS_IMAGEN} (máx. 5MB c/u). Subir nuevas reemplazará las anteriores.</small>
                 </div>
 
                 <div className="form-group">

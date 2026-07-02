@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { actualizarConfiguracionSitio } from '@/app/actions/configuracion'
+import { actualizarConfiguracionSitio, eliminarImagenCarrusel } from '@/app/actions/configuracion'
 import styles from '@/components/admin/admin.module.css'
 
 interface ConfiguracionClientProps {
@@ -39,8 +39,16 @@ export default function ConfiguracionClient({ initialConfig }: ConfiguracionClie
     }
   }
 
-  const removeCarruselImage = (indexToRemove: number) => {
-    setCarruselUrls((prev) => prev.filter((_, i) => i !== indexToRemove))
+  const removeCarruselImage = async (indexToRemove: number, url: string) => {
+    if (confirm('¿Estás seguro de que quieres borrar esta imagen del servidor?')) {
+      const res = await eliminarImagenCarrusel(url)
+      if (res.error) {
+        setMessage({ type: 'error', text: res.error })
+      } else {
+        setMessage({ type: 'success', text: res.success || 'Imagen eliminada' })
+        setCarruselUrls((prev) => prev.filter((_, i) => i !== indexToRemove))
+      }
+    }
   }
 
   const moveCarruselImage = (index: number, direction: 'left' | 'right') => {
@@ -196,7 +204,7 @@ export default function ConfiguracionClient({ initialConfig }: ConfiguracionClie
 
                     <button 
                       type="button" 
-                      onClick={() => removeCarruselImage(i)}
+                      onClick={() => removeCarruselImage(i, url)}
                       style={{ position: 'absolute', top: 6, right: 6, background: 'var(--color-danger)', color: 'white', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
                       title="Eliminar imagen"
                     >

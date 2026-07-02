@@ -7,11 +7,12 @@ import styles from './admin.module.css'
 export interface CrudField {
   name: string
   label: string
-  type?: 'text' | 'email' | 'url' | 'textarea' | 'tel' | 'select'
+  type?: 'text' | 'email' | 'url' | 'textarea' | 'tel' | 'select' | 'file'
   required?: boolean
   placeholder?: string
   fullWidth?: boolean
   options?: { value: string; label: string }[]
+  accept?: string
 }
 
 interface GenericCrudProps<T extends object> {
@@ -26,6 +27,7 @@ interface GenericCrudProps<T extends object> {
   onCreate: (state: ActionState, formData: FormData) => Promise<ActionState>
   onUpdate: (state: ActionState, formData: FormData) => Promise<ActionState>
   onDelete: (id: number) => Promise<ActionState>
+  onDeleteFile?: (id: number) => Promise<ActionState>
 }
 
 export default function GenericCrud<T extends object>({
@@ -40,6 +42,7 @@ export default function GenericCrud<T extends object>({
   onCreate,
   onUpdate,
   onDelete,
+  onDeleteFile,
 }: GenericCrudProps<T>) {
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<T | null>(null)
@@ -145,7 +148,7 @@ export default function GenericCrud<T extends object>({
 
             {state?.error && <div className="form-error" style={{ marginBottom: '1rem' }}>{state.error}</div>}
 
-            <form action={action}>
+            <form action={action} encType="multipart/form-data">
               {editing && (
                 <input type="hidden" name={idField} value={String((editing as Record<string, unknown>)[idField])} />
               )}
@@ -182,6 +185,41 @@ export default function GenericCrud<T extends object>({
                           </option>
                         ))}
                       </select>
+                    ) : field.type === 'file' ? (
+                      <div className={styles.fileField}>
+                        {editing && (editing as Record<string, unknown>)['ruta_archivo'] && (
+                          <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '0.85rem', color: '#666' }}>Archivo actual existe.</span>
+                            {onDeleteFile && (
+                              <button 
+                                type="button" 
+                                className="btn btn-outline" 
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', borderColor: 'var(--utn-red)', color: 'var(--utn-red)' }}
+                                onClick={async () => {
+                                  if (confirm('¿Borrar este archivo físicamente del servidor? Esta acción no se puede deshacer.')) {
+                                    const res = await onDeleteFile(Number((editing as Record<string, unknown>)[idField]))
+                                    if (res.success) {
+                                      alert(res.success)
+                                      closeModal()
+                                    } else if (res.error) {
+                                      alert(res.error)
+                                    }
+                                  }
+                                }}
+                              >
+                                🗑️ Borrar Archivo
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          name={field.name}
+                          className="form-input"
+                          accept={field.accept}
+                          required={!editing && field.required}
+                        />
+                      </div>
                     ) : (
                       <input
                         type={field.type ?? 'text'}

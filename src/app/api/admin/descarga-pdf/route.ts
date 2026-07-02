@@ -4,7 +4,7 @@ import fs from 'fs/promises'
 import path from 'path'
 
 export async function GET(request: NextRequest) {
-  // Verificar que el solicitante es administrador
+
   const session = await getSession()
   if (!session || session.rol !== 'Administrador FEUE') {
     return new NextResponse('No autorizado', { status: 401 })

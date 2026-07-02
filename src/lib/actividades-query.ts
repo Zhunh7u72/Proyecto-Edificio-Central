@@ -2,6 +2,8 @@ import 'server-only'
 import { query } from '@/lib/db'
 import { mapActividadConImagen } from '@/lib/actividad-archivos'
 import { fetchComentariosMap } from '@/lib/comentarios-query'
+import { fetchInscripcionesMap } from '@/lib/inscripciones-query'
+import { parseTipoActividad } from '@/lib/validar-input'
 import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 
@@ -13,8 +15,13 @@ const ACTIVIDADES_SQL = `
 `
 
 export async function fetchActividadesByTipo(tipo: string) {
+  const tipoSeguro = parseTipoActividad(tipo)
+  if (!tipoSeguro) {
+    return { data: [] as Actividad[], error: 'Tipo de actividad inválido.' }
+  }
+
   try {
-    const res = await query(ACTIVIDADES_SQL + ' WHERE a.tipo = $1 ORDER BY a.fecha_publicacion DESC', [tipo])
+    const res = await query(ACTIVIDADES_SQL + ' WHERE a.tipo = $1 ORDER BY a.fecha_publicacion DESC', [tipoSeguro])
     return {
       data: res.rows.map(mapActividadConImagen) as Actividad[],
       error: null,
@@ -24,7 +31,6 @@ export async function fetchActividadesByTipo(tipo: string) {
   }
 }
 
-import { fetchInscripcionesMap } from '@/lib/inscripciones-query'
 
 export async function fetchActividadesByTipoWithComentarios(tipo: string) {
   const { data, error } = await fetchActividadesByTipo(tipo)

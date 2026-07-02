@@ -5,6 +5,7 @@ import {
   crearDocumento,
   actualizarDocumento,
   eliminarDocumento,
+  eliminarDocumentoArchivo,
 } from '@/app/actions/documentos'
 import type { DocumentoPdf, SelectOption } from '@/lib/types/admin'
 
@@ -35,11 +36,12 @@ export default function DocumentosClient({
       options: actividadOptions,
     },
     {
-      name: 'ruta_archivo',
-      label: 'URL del PDF',
-      type: 'url' as const,
+      name: 'archivo_pdf',
+      label: 'Documento PDF (Archivo)',
+      type: 'file' as const,
+      accept: '.pdf',
       required: true,
-      placeholder: 'https://...',
+      placeholder: 'Selecciona un archivo PDF...',
     },
   ]
 
@@ -75,6 +77,7 @@ export default function DocumentosClient({
       onCreate={crearDocumento}
       onUpdate={actualizarDocumento}
       onDelete={eliminarDocumento}
+      onDeleteFile={eliminarDocumentoArchivo}
     />
   )
 }

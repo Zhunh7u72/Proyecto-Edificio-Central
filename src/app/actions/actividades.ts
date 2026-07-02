@@ -3,14 +3,20 @@
 import { query } from '@/lib/db'
 import { requireAdmin, parsePositiveInt } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
-import { syncImagenActividad, eliminarDependenciasActividad } from '@/lib/actividad-archivos'
+import { syncImagenActividad, eliminarDependenciasActividad, eliminarArchivoActividadIndividual } from '@/lib/actividad-archivos'
+import {
+  parseTipoActividad,
+  parseFechaDatetimeLocal,
+  sanitizarTexto,
+  assertIdEntero,
+} from '@/lib/validar-input'
 import type { ActionState } from '@/lib/types/admin'
 
 function buildActividadPayload(formData: FormData, tipo: string) {
-  const titulo = (formData.get('titulo') as string)?.trim()
-  const descripcion = (formData.get('descripcion') as string)?.trim() || null
-  const fecha_inicio = (formData.get('fecha_inicio') as string) || null
-  const fecha_fin = (formData.get('fecha_fin') as string) || null
+  const titulo = sanitizarTexto(formData.get('titulo'), 200)
+  const descripcion = sanitizarTexto(formData.get('descripcion'), 5000)
+  const fecha_inicio = parseFechaDatetimeLocal(formData.get('fecha_inicio'))
+  const fecha_fin = parseFechaDatetimeLocal(formData.get('fecha_fin'))
 
   if (!titulo) return { error: 'El título es obligatorio.' as const, payload: null }
 
@@ -18,8 +24,8 @@ function buildActividadPayload(formData: FormData, tipo: string) {
     titulo,
     descripcion,
     tipo,
-    fecha_inicio: fecha_inicio || null,
-    fecha_fin: fecha_fin || null,
+    fecha_inicio,
+    fecha_fin,
   }
 
   return { error: null, payload }
@@ -42,9 +48,10 @@ export async function crearActividad(
 ): Promise<ActionState> {
   try {
     const session = await requireAdmin()
-    const tipo = formData.get('tipo') as string
-    const { error, payload } = buildActividadPayload(formData, tipo)
+    const tipo = parseTipoActividad(formData.get('tipo'))
+    if (!tipo) return { error: 'Tipo de actividad inválido.' }
 
+    const { error, payload } = buildActividadPayload(formData, tipo)
     if (error || !payload) return { error: error ?? 'Datos inválidos.' }
 
     let inserted = null
@@ -78,9 +85,11 @@ export async function actualizarActividad(
     await requireAdmin()
     const id = parsePositiveInt(formData.get('id_actividad'))
     if (!id) return { error: 'ID de actividad inválido.' }
-    const tipo = formData.get('tipo') as string
-    const { error, payload } = buildActividadPayload(formData, tipo)
 
+    const tipo = parseTipoActividad(formData.get('tipo'))
+    if (!tipo) return { error: 'Tipo de actividad inválido.' }
+
+    const { error, payload } = buildActividadPayload(formData, tipo)
     if (error || !payload) return { error: error ?? 'Datos inválidos.' }
 
     try {
@@ -105,14 +114,15 @@ export async function actualizarActividad(
 export async function eliminarActividad(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
-    if (!Number.isFinite(id) || id <= 0) return { error: 'ID de actividad inválido.' }
+    const safeId = assertIdEntero(id)
+    if (!safeId) return { error: 'ID de actividad inválido.' }
 
-    await eliminarDependenciasActividad(id)
+    await eliminarDependenciasActividad(safeId)
 
     try {
-      await query('DELETE FROM actividades WHERE id_actividad = $1', [id])
-    } catch (error: any) {
-      return { error: 'Error al eliminar: ' + error.message }
+      await query('DELETE FROM actividades WHERE id_actividad = $1', [safeId])
+    } catch (dbError: any) {
+      return { error: 'Error al eliminar: ' + dbError.message }
     }
 
     revalidateActividadPaths()
@@ -127,8 +137,11 @@ export async function eliminarActividad(id: number): Promise<ActionState> {
 export async function toggleVisibilidadActividad(id: number, visible: boolean): Promise<ActionState> {
   try {
     await requireAdmin()
+    const safeId = assertIdEntero(id)
+    if (!safeId) return { error: 'ID de actividad inválido.' }
+
     try {
-      await query('UPDATE actividades SET visible = $1 WHERE id_actividad = $2', [visible, id])
+      await query('UPDATE actividades SET visible = $1 WHERE id_actividad = $2', [Boolean(visible), safeId])
     } catch (error: any) {
       return { error: 'Error al cambiar visibilidad: ' + error.message }
     }
@@ -146,26 +159,62 @@ export async function actualizarInfoActividad(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
+    const safeId = assertIdEntero(id)
+    if (!safeId) return { error: 'ID de actividad inválido.' }
+
     const payload: Record<string, unknown> = {}
-    if (data.titulo !== undefined) payload.titulo = data.titulo
-    if (data.descripcion !== undefined) payload.descripcion = data.descripcion
-    if (data.fecha_inicio !== undefined) payload.fecha_inicio = data.fecha_inicio || null
-    if (data.fecha_fin !== undefined) payload.fecha_fin = data.fecha_fin || null
+    if (data.titulo !== undefined) {
+      const titulo = sanitizarTexto(data.titulo, 200)
+      if (!titulo) return { error: 'El título no puede estar vacío.' }
+      payload.titulo = titulo
+    }
+    if (data.descripcion !== undefined) {
+      payload.descripcion = sanitizarTexto(data.descripcion, 5000)
+    }
+    if (data.fecha_inicio !== undefined) {
+      payload.fecha_inicio = data.fecha_inicio ? parseFechaDatetimeLocal(data.fecha_inicio) : null
+      if (data.fecha_inicio && payload.fecha_inicio === null) {
+        return { error: 'Fecha de inicio inválida.' }
+      }
+    }
+    if (data.fecha_fin !== undefined) {
+      payload.fecha_fin = data.fecha_fin ? parseFechaDatetimeLocal(data.fecha_fin) : null
+      if (data.fecha_fin && payload.fecha_fin === null) {
+        return { error: 'Fecha de fin inválida.' }
+      }
+    }
 
     const keys = Object.keys(payload)
-    if (keys.length > 0) {
-      const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
-      const values = keys.map(k => payload[k])
-      values.push(id)
-      try {
-        await query(`UPDATE actividades SET ${setClause} WHERE id_actividad = $${values.length}`, values)
-      } catch (error: any) {
-        return { error: 'Error al actualizar: ' + error.message }
-      }
+    if (keys.length === 0) return { success: 'Información actualizada.' }
+    
+    const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
+    const values = keys.map(k => payload[k])
+    values.push(safeId)
+
+    try {
+      await query(`UPDATE actividades SET ${setClause} WHERE id_actividad = $${keys.length + 1}`, values)
+    } catch (error: any) {
+      return { error: 'Error al actualizar: ' + error.message }
     }
 
     revalidateActividadPaths()
     return { success: 'Información actualizada.' }
+  } catch {
+    return { error: 'No autorizado.' }
+  }
+}
+
+export async function eliminarArchivoActividadAction(id: number): Promise<ActionState> {
+  try {
+    await requireAdmin()
+    const safeId = assertIdEntero(id)
+    if (!safeId) return { error: 'ID de archivo inválido.' }
+
+    const res = await eliminarArchivoActividadIndividual(safeId)
+    if (res.error) return { error: res.error }
+    
+    revalidateActividadPaths()
+    return { success: res.success || 'Archivo eliminado.' }
   } catch {
     return { error: 'No autorizado.' }
   }

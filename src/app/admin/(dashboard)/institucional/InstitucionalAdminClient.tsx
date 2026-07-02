@@ -152,7 +152,7 @@ export default function InstitucionalAdminClient({
                     placeholder="https://... (URL de la foto de perfil)"
                   />
                   <small style={{ color: 'var(--utn-gray)', marginTop: '0.25rem', display: 'block' }}>
-                    Puedes subir la foto a Supabase Storage o a cualquier servicio de imágenes y pegar el enlace directo aquí.
+                    Puedes guardar las imágenes localmente o pegar un enlace directo.
                   </small>
                 </div>
               </div>

@@ -15,12 +15,12 @@ function pdfNameFromUrl(url: string) {
 }
 
 export async function fetchFotosGaleria() {
-  let errorMsg = null
   const fotos: FotoGaleria[] = []
+  let errorMsg = null
 
   try {
     const actRes = await query(`
-      SELECT aa.id_archivo_activi, aa.ruta_archivo, a.titulo, a.tipo
+      SELECT aa.id_archivo_activi, aa.id_actividad, aa.ruta_archivo, a.titulo, a.tipo
       FROM archivos_actividades aa
       LEFT JOIN actividades a ON aa.id_actividad = a.id_actividad
       WHERE aa.tipo_archivo = $1
@@ -35,13 +35,10 @@ export async function fetchFotosGaleria() {
         titulo: row.titulo ?? 'Actividad',
         subtitulo: row.tipo ?? undefined,
         fuente: 'actividad',
+        id_actividad: row.id_actividad ?? undefined,
       })
     }
-  } catch (e: any) {
-    errorMsg = e.message
-  }
 
-  try {
     const carRes = await query(`
       SELECT fc.id_foto_carre, fc.ruta_foto, facc.nombre_carrera, fac.nombre_facultad
       FROM fotos_carreras fc
@@ -61,7 +58,7 @@ export async function fetchFotosGaleria() {
       })
     }
   } catch (e: any) {
-    if (!errorMsg) errorMsg = e.message
+    errorMsg = e.message
   }
 
   return { fotos, error: errorMsg }

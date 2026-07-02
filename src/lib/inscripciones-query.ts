@@ -1,6 +1,7 @@
 import 'server-only'
 import { query } from '@/lib/db'
 import { TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
+import { parsePositiveIntList } from '@/lib/validar-input'
 
 export type InscripcionAdmin = {
   id_matricula: number
@@ -15,9 +16,9 @@ type InscripcionRow = {
   id_actividad?: number
   fecha_registro: string
   usuarios:
-    | { id_usuario: number; nombres: string; apellidos: string; correo: string }
-    | { id_usuario: number; nombres: string; apellidos: string; correo: string }[]
-    | null
+  | { id_usuario: number; nombres: string; apellidos: string; correo: string }
+  | { id_usuario: number; nombres: string; apellidos: string; correo: string }[]
+  | null
   actividades?: { id_actividad: number; titulo: string; tipo: string } | { id_actividad: number; titulo: string; tipo: string }[] | null
 }
 
@@ -41,8 +42,9 @@ async function fetchPdfMap(
   const map = new Map<string, string>()
   if (pairs.length === 0) return map
 
-  const actIds = Array.from(new Set(pairs.map((p) => p.id_actividad)))
-  const userIds = Array.from(new Set(pairs.map((p) => p.id_usuario)))
+  const actIds = parsePositiveIntList(Array.from(new Set(pairs.map((p) => p.id_actividad))))
+  const userIds = parsePositiveIntList(Array.from(new Set(pairs.map((p) => p.id_usuario))))
+  if (actIds.length === 0 || userIds.length === 0) return map
 
   try {
     const res = await query(
@@ -117,41 +119,51 @@ export async function fetchInscripciones() {
 }
 
 export async function fetchInscripcionesByActividad(id_actividad: number) {
+  const safeId = parsePositiveIntList([id_actividad])[0]
+  if (!safeId) return { inscripciones: [], error: 'ID de actividad inválido.' }
+
   let rows: InscripcionRow[] = []
   let errorMsg = null
   try {
-    const res = await query(INSCRIPCIONES_SQL + ' WHERE m.id_actividad = $1 ORDER BY m.fecha_registro DESC', [id_actividad])
+    const res = await query(INSCRIPCIONES_SQL + ' WHERE m.id_actividad = $1 ORDER BY m.fecha_registro DESC', [safeId])
     rows = res.rows ?? []
   } catch (error: any) {
     errorMsg = error.message
   }
+
   const pairs = rows
     .map((row) => {
       const usuario = unwrapUsuario(row.usuarios)
       if (!usuario) return null
-      return { id_actividad, id_usuario: usuario.id_usuario }
+      return { id_actividad: safeId, id_usuario: usuario.id_usuario }
     })
     .filter((p): p is { id_actividad: number; id_usuario: number } => p !== null)
 
   const pdfMap = await fetchPdfMap(pairs)
-  const inscripciones = mapInscripcionRows(rows, pdfMap, id_actividad)
+  const inscripciones = mapInscripcionRows(rows, pdfMap, safeId)
 
   return { inscripciones, error: errorMsg }
 }
 
 export async function fetchInscripcionesMap(id_actividades: number[]) {
   const map: Record<number, InscripcionAdmin[]> = {}
-  for (const id of id_actividades) map[id] = []
+  const safeIds = parsePositiveIntList(id_actividades)
+  for (const id of safeIds) map[id] = []
 
-  if (id_actividades.length === 0) return map
+  if (safeIds.length === 0) return map
 
   let rows: InscripcionRow[] = []
   try {
-    const res = await query(INSCRIPCIONES_SQL + ' WHERE m.id_actividad = ANY($1) ORDER BY m.fecha_registro DESC', [id_actividades])
+    const params = safeIds.map((_, i) => `$${i + 1}`).join(', ')
+    const res = await query(
+      INSCRIPCIONES_SQL + ` WHERE m.id_actividad IN (${params}) ORDER BY m.fecha_registro DESC`,
+      safeIds
+    )
     rows = res.rows ?? []
   } catch (error) {
-    console.error(error)
+    // Ignore error
   }
+
   if (rows.length === 0) return map
 
   const pairs = rows

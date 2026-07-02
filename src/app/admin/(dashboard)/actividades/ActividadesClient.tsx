@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearActividad } from '@/app/actions/actividades'
 import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
+import { ACCEPT_SOLO_IMAGENES, ETIQUETA_FORMATOS_IMAGEN } from '@/lib/archivo-constants'
 import ActividadDetalleModal from '@/components/admin/ActividadDetalleModal'
 
 interface Props {
@@ -19,6 +20,13 @@ export default function ActividadesClient({ actividades, comentariosPorActividad
   const [showModal, setShowModal] = useState(false)
   const [selectedActividad, setSelectedActividad] = useState<Actividad | null>(null)
   const [state, action, isPending] = useActionState(crearActividad, undefined)
+
+  useEffect(() => {
+    if (state?.success) {
+      setShowModal(false)
+      router.refresh()
+    }
+  }, [state?.success, router])
 
   const handleRowClick = (act: Actividad) => {
     setSelectedActividad(act)
@@ -130,6 +138,18 @@ export default function ActividadesClient({ actividades, comentariosPorActividad
               <div className="form-group">
                 <label className="form-label">Descripción</label>
                 <textarea name="descripcion" className="form-input" rows={4}></textarea>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Fotografía de portada</label>
+                <input
+                  type="file"
+                  name="archivos"
+                  className="form-input"
+                  accept={ACCEPT_SOLO_IMAGENES}
+                />
+                <small style={{ color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                  Solo {ETIQUETA_FORMATOS_IMAGEN} (máx. 5 MB).
+                </small>
               </div>
               <div className="form-group">
                 <label className="form-label">Tipo de Actividad</label>

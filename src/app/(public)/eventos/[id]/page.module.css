@@ -73,6 +73,12 @@
   border-bottom: 2px solid var(--color-border);
 }
 
+.sectionSubtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  margin: -0.75rem 0 1.25rem;
+}
+
 .description {
   font-size: 1.05rem;
   line-height: 1.7;

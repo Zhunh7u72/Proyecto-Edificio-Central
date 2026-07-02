@@ -3,6 +3,7 @@
 import { query } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
+import { parseUrlHttp, assertIdEntero, parsePositiveInt } from '@/lib/validar-input'
 import type { ActionState } from '@/lib/types/admin'
 
 function revalidate() {
@@ -16,11 +17,11 @@ export async function crearGaleria(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
-    const id_facultad_carrera = parseInt(formData.get('id_facultad_carrera') as string)
-    const ruta_foto = (formData.get('ruta_foto') as string)?.trim()
+    const id_facultad_carrera = parsePositiveInt(formData.get('id_facultad_carrera'))
+    const ruta_foto = parseUrlHttp(formData.get('ruta_foto'))
 
     if (!id_facultad_carrera) return { error: 'Selecciona una carrera.' }
-    if (!ruta_foto) return { error: 'El link de la imagen es obligatorio.' }
+    if (!ruta_foto) return { error: 'El link de la imagen es obligatorio y debe ser válido.' }
 
     try {
       await query(
@@ -43,12 +44,13 @@ export async function actualizarGaleria(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
-    const id = parseInt(formData.get('id_foto_carre') as string)
-    const id_facultad_carrera = parseInt(formData.get('id_facultad_carrera') as string)
-    const ruta_foto = (formData.get('ruta_foto') as string)?.trim()
+    const id = parsePositiveInt(formData.get('id_foto_carre'))
+    const id_facultad_carrera = parsePositiveInt(formData.get('id_facultad_carrera'))
+    const ruta_foto = parseUrlHttp(formData.get('ruta_foto'))
 
+    if (!id) return { error: 'ID de foto inválido.' }
     if (!id_facultad_carrera) return { error: 'Selecciona una carrera.' }
-    if (!ruta_foto) return { error: 'El link de la imagen es obligatorio.' }
+    if (!ruta_foto) return { error: 'El link de la imagen es obligatorio y debe ser válido.' }
 
     try {
       await query(
@@ -68,8 +70,11 @@ export async function actualizarGaleria(
 export async function eliminarGaleria(id: number): Promise<ActionState> {
   try {
     await requireAdmin()
+    const safeId = assertIdEntero(id)
+    if (!safeId) return { error: 'ID de foto inválido.' }
+
     try {
-      await query('DELETE FROM fotos_carreras WHERE id_foto_carre = $1', [id])
+      await query('DELETE FROM fotos_carreras WHERE id_foto_carre = $1', [safeId])
     } catch (error: any) {
       return { error: 'Error al eliminar: ' + error.message }
     }

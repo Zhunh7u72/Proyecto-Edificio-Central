@@ -1,6 +1,7 @@
 import 'server-only'
 import { query } from '@/lib/db'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
+import { parsePositiveInt, parsePositiveIntList } from '@/lib/validar-input'
 
 const COMENTARIOS_SQL = `
   SELECT c.id_comentario, c.id_actividad, c.contenido_texto, c.fecha_comentario,
@@ -17,9 +18,9 @@ function mapComentarioRow(row: {
   fecha_comentario: string
   usuarios: { nombres: string; apellidos: string } | { nombres: string; apellidos: string }[] | null
   archivos_interaccion:
-    | { id_archivo_inter: number; ruta_archivo: string; tipo_archivo: string }
-    | { id_archivo_inter: number; ruta_archivo: string; tipo_archivo: string }[]
-    | null
+  | { id_archivo_inter: number; ruta_archivo: string; tipo_archivo: string }
+  | { id_archivo_inter: number; ruta_archivo: string; tipo_archivo: string }[]
+  | null
 }): ComentarioPublico {
   const usuario = Array.isArray(row.usuarios) ? row.usuarios[0] : row.usuarios
   const archivos = row.archivos_interaccion
@@ -33,10 +34,15 @@ function mapComentarioRow(row: {
 }
 
 export async function fetchComentariosActividad(id_actividad: number) {
+  const safeId = parsePositiveInt(id_actividad)
+  if (!safeId) {
+    return { comentarios: [], error: 'ID de actividad inválido.' }
+  }
+
   try {
-    const res = await query(COMENTARIOS_SQL + ' WHERE c.id_actividad = $1 ORDER BY c.fecha_comentario ASC', [id_actividad])
+    const res = await query(COMENTARIOS_SQL + ' WHERE c.id_actividad = $1 ORDER BY c.fecha_comentario ASC', [safeId])
     return {
-      comentarios: (res.rows ?? []).map(mapComentarioRow),
+      comentarios: res.rows.map(mapComentarioRow),
       error: null,
     }
   } catch (error: any) {
@@ -46,19 +52,22 @@ export async function fetchComentariosActividad(id_actividad: number) {
 
 export async function fetchComentariosMap(id_actividades: number[]) {
   const map: Record<number, ComentarioPublico[]> = {}
-  for (const id of id_actividades) map[id] = []
+  const safeIds = parsePositiveIntList(id_actividades)
+  for (const id of safeIds) map[id] = []
 
-  if (id_actividades.length === 0) return map
+  if (safeIds.length === 0) return map
 
   try {
-    const res = await query(COMENTARIOS_SQL + ' WHERE c.id_actividad = ANY($1) ORDER BY c.fecha_comentario ASC', [id_actividades])
-    for (const row of res.rows ?? []) {
+    const params = safeIds.map((_, i) => `$${i + 1}`).join(', ')
+    const res = await query(COMENTARIOS_SQL + ` WHERE c.id_actividad IN (${params}) ORDER BY c.fecha_comentario ASC`, safeIds)
+    
+    for (const row of res.rows) {
       const id = row.id_actividad as number
       if (!map[id]) map[id] = []
       map[id].push(mapComentarioRow(row))
     }
   } catch (error) {
-    console.error(error)
+    // Ignore error
   }
 
   return map

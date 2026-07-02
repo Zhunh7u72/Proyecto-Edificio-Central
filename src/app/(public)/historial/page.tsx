@@ -1,11 +1,12 @@
 import { query } from '@/lib/db'
 import HistorialClient from './HistorialClient'
+import { isoParaFiltroPostgrest } from '@/lib/validar-input'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HistorialPage() {
-  const hoy = new Date().toISOString()
+  const hoy = isoParaFiltroPostgrest()
 
   const res = await query(`
     SELECT id_actividad, titulo, descripcion, tipo, fecha_publicacion, fecha_inicio, fecha_fin
