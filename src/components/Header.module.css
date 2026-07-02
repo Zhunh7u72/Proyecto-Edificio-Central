@@ -36,14 +36,13 @@
 .navbar {
   background: var(--utn-red);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  padding: 0;
 }
 
 .navInner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 96px;
+  min-height: 74px;
   gap: 1.5rem;
   width: 100%;
   max-width: 1500px;
@@ -60,11 +59,11 @@
   flex-shrink: 0;
   padding: 0;
   align-self: center;
-  min-height: 96px;
+  min-height: 74px;
 }
 
 .logo {
-  height: 84px;
+  height: 56px;
   width: auto;
   max-width: 150px;
   object-fit: contain;
@@ -126,7 +125,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 0 1.5rem;
-  min-height: 96px;
+  min-height: 74px;
   transition: background var(--transition-fast), color var(--transition-fast);
   background: none;
   border: none;
@@ -247,17 +246,17 @@
   }
 
   .navInner {
-    min-height: 72px;
+    min-height: 100px;
     padding-left: 0.25rem;
   }
 
   .brand {
-    min-height: 72px;
+    min-height: 100px;
     gap: 1.25rem;
   }
 
   .logo {
-    height: 56px;
+    height: 100px;
     max-width: 110px;
   }
 

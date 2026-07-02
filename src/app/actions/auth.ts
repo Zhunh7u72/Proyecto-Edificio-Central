@@ -17,7 +17,6 @@ export async function login(state: LoginState, formData: FormData): Promise<Logi
     return { error: 'Correo y contraseña son obligatorios.' }
   }
 
-  // Buscar usuario con rol Administrador FEUE
   const { data: usuario, error } = await supabaseAdmin
     .from('usuarios')
     .select('*')
@@ -33,13 +32,11 @@ export async function login(state: LoginState, formData: FormData): Promise<Logi
     return { error: 'Este usuario no tiene contraseña configurada.' }
   }
 
-  // Comparar contraseña
   const valid = await bcrypt.compare(password, usuario.password_hash)
   if (!valid) {
     return { error: 'Contraseña incorrecta.' }
   }
 
-  // Crear sesión
   await createSession(usuario.id_usuario, usuario.rol)
 
   redirect('/admin/dashboard')

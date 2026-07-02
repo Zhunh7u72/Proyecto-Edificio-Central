@@ -92,7 +92,9 @@ export default async function EventPage({ params }: EventPageProps) {
               ) : (
                 <li>
                   <strong>Estado:</strong><br />
-                  <span className={styles.openText}>Libre / No requiere inscripción previa estricta</span>
+                  <span className={styles.openText}>
+                    Libre / No requiere inscripción previa estricta
+                  </span>
                 </li>
               )}
             </ul>
