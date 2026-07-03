@@ -9,7 +9,7 @@ import {
 } from '@/app/actions/documentos'
 import type { DocumentoPdf, SelectOption } from '@/lib/types/admin'
 
-type DocumentoRow = DocumentoPdf & { titulo_actividad: string }
+type DocumentoRow = DocumentoPdf & { titulo_actividad: string; nombre?: string | null }
 
 type ActividadOption = { id_actividad: number; titulo: string }
 
