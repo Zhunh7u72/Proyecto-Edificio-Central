@@ -49,6 +49,10 @@ export default async function EventPage({ params }: EventPageProps) {
     .map((a) => a.ruta_archivo)
     .filter((ruta) => esFotoMemoria(ruta))
 
+  const mainImage = (archivos ?? [])
+    .map((a) => a.ruta_archivo)
+    .find((ruta) => !esFotoMemoria(ruta))
+
   const fechaPub = new Date(actividad.fecha_publicacion).toLocaleDateString('es-EC', {
     weekday: 'long',
     day: 'numeric',
@@ -84,6 +88,13 @@ export default async function EventPage({ params }: EventPageProps) {
             <h3 className={styles.sectionTitle}>
               {eventoFinalizado ? 'Resumen del evento' : 'Detalles de la Actividad'}
             </h3>
+            
+            {mainImage && (
+              <div style={{ marginBottom: '1.5rem', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                <img src={mainImage} alt={actividad.titulo} style={{ width: '100%', height: 'auto', maxHeight: '500px', objectFit: 'contain', backgroundColor: '#f3f4f6' }} />
+              </div>
+            )}
+
             <div className={styles.description}>
               {actividad.descripcion ? (
                 <p>{actividad.descripcion}</p>
