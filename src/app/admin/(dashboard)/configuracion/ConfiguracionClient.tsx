@@ -40,9 +40,14 @@ export default function ConfiguracionClient({ initialConfig }: ConfiguracionClie
   }
 
   const removeCarruselImage = async (indexToRemove: number, url: string) => {
-    if (confirm('¿Estás seguro de que quieres borrar esta imagen del servidor?')) {
+    if (confirm('¿Estás seguro de que quieres borrar esta imagen del carrusel?')) {
       const res = await eliminarImagenCarrusel(url)
       if (res.error) {
+        // Si no hay configuración guardada aún o no está en BD, simplemente la quitamos del estado visual
+        if (res.error === 'Configuración no encontrada.' || res.error === 'Imagen no encontrada en el carrusel') {
+          setCarruselUrls((prev) => prev.filter((_, i) => i !== indexToRemove))
+          return
+        }
         setMessage({ type: 'error', text: res.error })
       } else {
         setMessage({ type: 'success', text: res.success || 'Imagen eliminada' })
