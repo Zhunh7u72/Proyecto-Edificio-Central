@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs'
 
-export async function GET(request: Request, { params }: { params: { path: string[] } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   try {
+    const resolvedParams = await params
     // Construir la ruta absoluta al archivo dentro de public/uploads
-    // params.path es un arreglo con las partes de la URL, ej: ['imagenes', 'foto.jpg']
-    const filePath = path.join(process.cwd(), 'public', 'uploads', ...params.path)
+    // resolvedParams.path es un arreglo con las partes de la URL, ej: ['imagenes', 'foto.jpg']
+    const filePath = path.join(process.cwd(), 'public', 'uploads', ...resolvedParams.path)
     
     // Verificar si el archivo existe
     if (!fs.existsSync(filePath)) {

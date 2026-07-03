@@ -22,17 +22,27 @@ export default function DocumentosClient({
   actividades: ActividadOption[]
   dbError?: string | null
 }) {
-  const actividadOptions: SelectOption[] = actividades.map((a) => ({
-    value: String(a.id_actividad),
-    label: a.titulo,
-  }))
+  const actividadOptions: SelectOption[] = [
+    { value: '', label: '-- Ninguna (Documento Institucional) --' },
+    ...actividades.map((a) => ({
+      value: String(a.id_actividad),
+      label: a.titulo,
+    }))
+  ]
 
   const fields = [
     {
+      name: 'nombre',
+      label: 'Nombre del Documento (Opcional si tiene actividad)',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Ej: Reglamento General 2026',
+    },
+    {
       name: 'id_actividad',
-      label: 'Actividad',
+      label: 'Vincular a Actividad (Opcional)',
       type: 'select' as const,
-      required: true,
+      required: false,
       options: actividadOptions,
     },
     {
@@ -48,13 +58,14 @@ export default function DocumentosClient({
   return (
     <GenericCrud<DocumentoRow>
       pageTitle="Gestión de Documentos PDF"
-      pageDescription="Administrar archivos PDF vinculados a actividades (archivos_actividades)."
+      pageDescription="Sube documentos institucionales o vincúlalos a actividades."
       entityName="Documento"
       idField="id_archivo_activi"
       items={items}
       fields={fields}
       dbError={dbError}
       columns={[
+        { key: 'nombre', label: 'Nombre' },
         { key: 'titulo_actividad', label: 'Actividad' },
         {
           key: 'ruta_archivo',

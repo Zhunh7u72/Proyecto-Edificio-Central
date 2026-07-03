@@ -67,7 +67,7 @@ export async function fetchFotosGaleria() {
 export async function fetchDocumentosPublicos() {
   try {
     const res = await query(`
-      SELECT aa.id_archivo_activi, aa.ruta_archivo, a.titulo, a.tipo
+      SELECT aa.id_archivo_activi, aa.ruta_archivo, aa.nombre as nombre_doc, a.titulo, a.tipo
       FROM archivos_actividades aa
       LEFT JOIN actividades a ON aa.id_actividad = a.id_actividad
       WHERE aa.tipo_archivo = $1 AND aa.id_usuario IS NULL
@@ -76,7 +76,7 @@ export async function fetchDocumentosPublicos() {
 
     const documentos: DocumentoPublico[] = res.rows.map((row) => ({
       id_archivo_activi: row.id_archivo_activi,
-      nombre: row.titulo?.trim() || pdfNameFromUrl(row.ruta_archivo),
+      nombre: row.nombre_doc?.trim() || row.titulo?.trim() || pdfNameFromUrl(row.ruta_archivo),
       ruta_archivo: row.ruta_archivo,
       actividad_tipo: row.tipo ?? undefined,
     }))

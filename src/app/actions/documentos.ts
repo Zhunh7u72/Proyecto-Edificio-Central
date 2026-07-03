@@ -19,9 +19,12 @@ export async function crearDocumento(
 ): Promise<ActionState> {
   try {
     await requireAdmin()
-    const id_actividad = parsePositiveInt(formData.get('id_actividad'))
+    const id_actividad_str = formData.get('id_actividad')
+    const id_actividad = id_actividad_str ? parsePositiveInt(id_actividad_str) : null
+    
+    const nombre = formData.get('nombre') as string | null
 
-    if (!id_actividad) return { error: 'Selecciona una actividad.' }
+    // Ya no es obligatoria la actividad (id_actividad puede ser null)
 
     const archivo = formData.get('archivo_pdf') as File | null
     if (!archivo || archivo.size === 0) {
@@ -43,8 +46,8 @@ export async function crearDocumento(
 
     try {
       await query(
-        'INSERT INTO archivos_actividades (id_actividad, ruta_archivo, tipo_archivo) VALUES ($1, $2, $3)',
-        [id_actividad, localRuta, TIPO_ARCHIVO_PDF]
+        'INSERT INTO archivos_actividades (id_actividad, ruta_archivo, tipo_archivo, nombre) VALUES ($1, $2, $3, $4)',
+        [id_actividad, localRuta, TIPO_ARCHIVO_PDF, nombre || null]
       )
     } catch (error: any) {
       return { error: 'Error al crear: ' + error.message }
@@ -63,10 +66,12 @@ export async function actualizarDocumento(
   try {
     await requireAdmin()
     const id = parsePositiveInt(formData.get('id_archivo_activi'))
-    const id_actividad = parsePositiveInt(formData.get('id_actividad'))
+    const id_actividad_str = formData.get('id_actividad')
+    const id_actividad = id_actividad_str ? parsePositiveInt(id_actividad_str) : null
+    
+    const nombre = formData.get('nombre') as string | null
 
     if (!id) return { error: 'ID de documento inválido.' }
-    if (!id_actividad) return { error: 'Selecciona una actividad.' }
 
     const archivo = formData.get('archivo_pdf') as File | null
     let nuevaRuta: string | undefined = undefined
@@ -94,13 +99,13 @@ export async function actualizarDocumento(
     try {
       if (nuevaRuta) {
         await query(
-          'UPDATE archivos_actividades SET id_actividad = $1, ruta_archivo = $2, tipo_archivo = $3 WHERE id_archivo_activi = $4',
-          [id_actividad, nuevaRuta, TIPO_ARCHIVO_PDF, id]
+          'UPDATE archivos_actividades SET id_actividad = $1, ruta_archivo = $2, tipo_archivo = $3, nombre = $4 WHERE id_archivo_activi = $5',
+          [id_actividad, nuevaRuta, TIPO_ARCHIVO_PDF, nombre || null, id]
         )
       } else {
         await query(
-          'UPDATE archivos_actividades SET id_actividad = $1, tipo_archivo = $2 WHERE id_archivo_activi = $3',
-          [id_actividad, TIPO_ARCHIVO_PDF, id]
+          'UPDATE archivos_actividades SET id_actividad = $1, tipo_archivo = $2, nombre = $3 WHERE id_archivo_activi = $4',
+          [id_actividad, TIPO_ARCHIVO_PDF, nombre || null, id]
         )
       }
     } catch (error: any) {

@@ -12,7 +12,7 @@ export default async function DocumentosPage() {
   
   try {
     const dataRes = await query(`
-      SELECT aa.id_archivo_activi, aa.id_actividad, aa.ruta_archivo, aa.tipo_archivo, a.titulo as titulo_actividad
+      SELECT aa.id_archivo_activi, aa.id_actividad, aa.ruta_archivo, aa.tipo_archivo, aa.nombre, a.titulo as titulo_actividad
       FROM archivos_actividades aa
       LEFT JOIN actividades a ON aa.id_actividad = a.id_actividad
       WHERE aa.tipo_archivo = $1 AND aa.id_usuario IS NULL
