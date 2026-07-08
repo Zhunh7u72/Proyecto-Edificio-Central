@@ -3,7 +3,7 @@
 import { query } from '@/lib/db'
 import { requireAdmin, parsePositiveInt } from '@/lib/auth-admin'
 import { revalidatePath } from 'next/cache'
-import { syncImagenActividad, eliminarDependenciasActividad, eliminarArchivoActividadIndividual } from '@/lib/actividad-archivos'
+import { syncImagenActividad, syncVideoActividad, eliminarDependenciasActividad, eliminarArchivoActividadIndividual } from '@/lib/actividad-archivos'
 import {
   parseTipoActividad,
   parseFechaDatetimeLocal,
@@ -26,6 +26,7 @@ function buildActividadPayload(formData: FormData, tipo: string) {
     tipo,
     fecha_inicio,
     fecha_fin,
+    video_url: sanitizarTexto(formData.get('video_url'), 500) || null,
   }
 
   return { error: null, payload }
@@ -57,9 +58,9 @@ export async function crearActividad(
     let inserted = null
     try {
       const res = await query(
-        `INSERT INTO actividades (titulo, descripcion, tipo, fecha_inicio, fecha_fin, id_usuario) 
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_actividad`,
-        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, session.userId]
+        `INSERT INTO actividades (titulo, descripcion, tipo, fecha_inicio, fecha_fin, video_url, id_usuario) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id_actividad`,
+        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, payload.video_url, session.userId]
       )
       if (res.rowCount === 0) throw new Error('sin respuesta')
       inserted = res.rows[0]
@@ -69,6 +70,9 @@ export async function crearActividad(
 
     const imageResult = await syncImagenActividad(inserted.id_actividad, formData)
     if (imageResult.error) return { error: imageResult.error }
+
+    const videoResult = await syncVideoActividad(inserted.id_actividad, formData)
+    if (videoResult.error) return { error: videoResult.error }
 
     revalidateActividadPaths()
     return { success: `${tipo} creado exitosamente.` }
@@ -94,8 +98,8 @@ export async function actualizarActividad(
 
     try {
       await query(
-        `UPDATE actividades SET titulo = $1, descripcion = $2, tipo = $3, fecha_inicio = $4, fecha_fin = $5 WHERE id_actividad = $6`,
-        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, id]
+        `UPDATE actividades SET titulo = $1, descripcion = $2, tipo = $3, fecha_inicio = $4, fecha_fin = $5, video_url = $6 WHERE id_actividad = $7`,
+        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, payload.video_url, id]
       )
     } catch (dbError: any) {
       return { error: 'Error al actualizar: ' + dbError.message }
@@ -103,6 +107,9 @@ export async function actualizarActividad(
 
     const imageResult = await syncImagenActividad(id, formData)
     if (imageResult.error) return { error: imageResult.error }
+
+    const videoResult = await syncVideoActividad(id, formData)
+    if (videoResult.error) return { error: videoResult.error }
 
     revalidateActividadPaths()
     return { success: `${tipo} actualizado exitosamente.` }

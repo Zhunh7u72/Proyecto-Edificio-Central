@@ -10,6 +10,7 @@ export interface Actividad {
   visible?: boolean
   /** Alias de formulario / UI */
   fecha_inicio?: string | null
+  video_url?: string | null
   archivos_actividades?: {
     id_archivo_activi: number
     ruta_archivo: string

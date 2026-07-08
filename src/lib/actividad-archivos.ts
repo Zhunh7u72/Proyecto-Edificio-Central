@@ -1,10 +1,10 @@
 import 'server-only'
 import { query } from '@/lib/db'
 import { saveLocalFile, deleteLocalFile } from '@/lib/storage'
-import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF, MAX_IMAGEN_BYTES } from '@/lib/archivo-constants'
+import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF, TIPO_ARCHIVO_VIDEO, MAX_IMAGEN_BYTES, MAX_VIDEO_BYTES, esVideoPermitido } from '@/lib/archivo-constants'
 import { validarArchivoImagen } from '@/lib/validar-contenido-archivo'
 
-export { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF } from '@/lib/archivo-constants'
+export { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_PDF, TIPO_ARCHIVO_VIDEO } from '@/lib/archivo-constants'
 export interface ArchivoActividad {
   id_archivo_activi?: number
   ruta_archivo: string
@@ -103,6 +103,67 @@ export async function syncImagenActividad(
     } catch (insertError: any) {
       return { error: 'Error al guardar referencia de imagen: ' + insertError.message }
     }
+  }
+
+  return {}
+}
+
+export async function guardarVideoActividad(file: File, id_actividad: number): Promise<{ ruta: string; tipo: string } | { error: string }> {
+  if (file.size > MAX_VIDEO_BYTES) {
+    return { error: 'Los videos no pueden superar 100 MB.' }
+  }
+
+  if (!esVideoPermitido(file)) {
+    return { error: 'Solo se permiten videos MP4, WEBM o MOV.' }
+  }
+
+  const extension = file.name.split('.').pop()
+  const safeName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`
+  const storagePath = `videos/${safeName}`
+
+  let localRuta = ''
+  try {
+    localRuta = await saveLocalFile(file, storagePath)
+  } catch (uploadError: any) {
+    return { error: 'Error al subir el video: ' + uploadError.message }
+  }
+
+  return {
+    ruta: localRuta,
+    tipo: TIPO_ARCHIVO_VIDEO,
+  }
+}
+
+export async function syncVideoActividad(
+  id_actividad: number,
+  formData: FormData
+): Promise<{ error?: string }> {
+  const videoFile = formData.get('video_archivo') as File | null
+  if (!videoFile || videoFile.size === 0) return {}
+
+  // Delete old video files for this activity
+  try {
+    const viejosVideos = await query('SELECT id_archivo_activi, ruta_archivo FROM archivos_actividades WHERE id_actividad = $1 AND tipo_archivo = $2', [id_actividad, TIPO_ARCHIVO_VIDEO])
+    for (const v of viejosVideos.rows) {
+      if (v.ruta_archivo) await deleteLocalFile(v.ruta_archivo.replace('/uploads/', ''))
+    }
+    if (viejosVideos.rows.length > 0) {
+      await query('DELETE FROM archivos_actividades WHERE id_actividad = $1 AND tipo_archivo = $2', [id_actividad, TIPO_ARCHIVO_VIDEO])
+    }
+  } catch (deleteError: any) {
+    return { error: 'Error al limpiar video anterior: ' + deleteError.message }
+  }
+
+  const saved = await guardarVideoActividad(videoFile, id_actividad)
+  if ('error' in saved) return { error: saved.error }
+
+  try {
+    await query(
+      'INSERT INTO archivos_actividades (id_actividad, ruta_archivo, tipo_archivo) VALUES ($1, $2, $3)',
+      [id_actividad, saved.ruta, saved.tipo]
+    )
+  } catch (insertError: any) {
+    return { error: 'Error al guardar referencia de video: ' + insertError.message }
   }
 
   return {}

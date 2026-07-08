@@ -12,7 +12,7 @@ import type { ComentarioPublico } from '@/lib/types/comentarios'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
 import AdminComentariosModal from '@/components/admin/AdminComentariosModal'
 import LoadingOverlay from '@/components/LoadingOverlay'
-import { ACCEPT_SOLO_IMAGENES, ETIQUETA_FORMATOS_IMAGEN } from '@/lib/archivo-constants'
+import { ACCEPT_SOLO_IMAGENES, ETIQUETA_FORMATOS_IMAGEN, ACCEPT_SOLO_VIDEOS, ETIQUETA_FORMATOS_VIDEO } from '@/lib/archivo-constants'
 import styles from './admin.module.css'
 
 interface ActividadCrudProps {
@@ -235,9 +235,9 @@ export default function ActividadCrud({
 
                 <div className={`form-group ${styles.formGridFull}`}>
                   <label className="form-label">Foto / Imágenes</label>
-                  {editing && editing.archivos_actividades && editing.archivos_actividades.length > 0 && (
+                  {editing && editing.archivos_actividades && editing.archivos_actividades.filter(a => a.tipo_archivo !== 'Video').length > 0 && (
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                      {editing.archivos_actividades.map(archivo => (
+                      {editing.archivos_actividades.filter(a => a.tipo_archivo !== 'Video').map(archivo => (
                         <div key={archivo.id_archivo_activi} style={{ position: 'relative', width: '100px', height: '100px', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden' }}>
                           <img src={archivo.ruta_archivo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           <button
@@ -260,6 +260,48 @@ export default function ActividadCrud({
                     multiple
                   />
                   <small className={styles.fileHint}>Solo {ETIQUETA_FORMATOS_IMAGEN} (máx. 5MB c/u). Subir nuevas reemplazará las anteriores.</small>
+                </div>
+
+                <div className={`form-group ${styles.formGridFull}`} style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    🎬 Video (Opcional)
+                  </label>
+                  
+                  <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 500 }}>Enlace de Video (YouTube, Facebook, etc.)</label>
+                  <input
+                    type="url"
+                    name="video_url"
+                    className="form-input"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    defaultValue={editing?.video_url ?? ''}
+                  />
+                  <small className={styles.fileHint}>Pega un enlace de YouTube o Facebook y se reproducirá automáticamente.</small>
+
+                  <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 500, marginTop: '0.75rem' }}>O sube un archivo de video</label>
+                  {editing && editing.archivos_actividades && editing.archivos_actividades.filter(a => a.tipo_archivo === 'Video').length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                      {editing.archivos_actividades.filter(a => a.tipo_archivo === 'Video').map(archivo => (
+                        <div key={archivo.id_archivo_activi} style={{ position: 'relative', background: '#1a1a2e', borderRadius: '8px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#fff', fontSize: '0.85rem' }}>🎥 Video subido</span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePhoto(archivo.id_archivo_activi!)}
+                            style={{ background: 'var(--color-danger)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                            title="Eliminar video"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    name="video_archivo"
+                    className="form-input"
+                    accept={ACCEPT_SOLO_VIDEOS}
+                  />
+                  <small className={styles.fileHint}>Solo {ETIQUETA_FORMATOS_VIDEO} (máx. 100MB). Subir uno nuevo reemplazará el anterior.</small>
                 </div>
 
                 <div className="form-group">

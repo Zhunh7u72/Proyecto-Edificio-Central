@@ -4,7 +4,8 @@ import Link from 'next/link'
 import EnrollForm from '@/components/EnrollForm'
 import CommentsSection from '@/components/CommentsSection'
 import ActivityImageCarousel from '@/components/ActivityImageCarousel'
-import { TIPO_ARCHIVO_FOTO, esFotoMemoria } from '@/lib/actividad-archivos'
+import VideoPlayer from '@/components/VideoPlayer'
+import { TIPO_ARCHIVO_FOTO, TIPO_ARCHIVO_VIDEO, esFotoMemoria } from '@/lib/actividad-archivos'
 import { fetchComentariosActividad } from '@/lib/comentarios-query'
 import { parsePositiveInt } from '@/lib/validar-input'
 import styles from './page.module.css'
@@ -23,16 +24,18 @@ export default async function EventPage({ params }: EventPageProps) {
     notFound()
   }
 
-  const [archivosRes, inscritosRes, { comentarios }] = await Promise.all([
+  const [archivosRes, videoRes, inscritosRes, { comentarios }] = await Promise.all([
     query('SELECT ruta_archivo, tipo_archivo FROM archivos_actividades WHERE id_actividad = $1 AND tipo_archivo = $2', [idActividad, TIPO_ARCHIVO_FOTO]),
+    query('SELECT ruta_archivo FROM archivos_actividades WHERE id_actividad = $1 AND tipo_archivo = $2', [idActividad, TIPO_ARCHIVO_VIDEO]),
     query('SELECT COUNT(*) as count FROM matriculas_eventos WHERE id_actividad = $1', [idActividad]),
     fetchComentariosActividad(idActividad)
   ])
 
   const inscritosCount = parseInt(inscritosRes.rows[0]?.count || '0')
   const archivos = archivosRes.rows ?? []
+  const videoArchivo = videoRes.rows.length > 0 ? videoRes.rows[0].ruta_archivo : null
 
-  // Obtener actividad
+  // Obtener actividad (incluyendo video_url)
   const res = await query(`
     SELECT a.*, 
            (SELECT row_to_json(u) FROM (SELECT nombres, apellidos FROM usuarios WHERE id_usuario = a.id_usuario) u) as usuarios
@@ -109,6 +112,13 @@ export default async function EventPage({ params }: EventPageProps) {
               )}
             </div>
           </div>
+
+          {(videoArchivo || actividad.video_url) && (
+            <div className={styles.contentBox} style={{ marginTop: '2rem' }}>
+              <h3 className={styles.sectionTitle}>Video</h3>
+              <VideoPlayer videoFile={videoArchivo} videoUrl={actividad.video_url} title={actividad.titulo} />
+            </div>
+          )}
 
           {fotosMemoria.length > 0 && (
             <div className={styles.contentBox} style={{ marginTop: '2rem' }}>

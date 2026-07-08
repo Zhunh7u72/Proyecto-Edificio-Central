@@ -8,7 +8,7 @@ import type { Actividad } from '@/lib/types/admin'
 import type { ComentarioPublico } from '@/lib/types/comentarios'
 
 const ACTIVIDADES_SQL = `
-  SELECT a.id_actividad, a.id_usuario, a.titulo, a.descripcion, a.tipo, a.fecha_publicacion, a.fecha_inicio, a.fecha_fin, a.visible,
+  SELECT a.id_actividad, a.id_usuario, a.titulo, a.descripcion, a.tipo, a.fecha_publicacion, a.fecha_inicio, a.fecha_fin, a.visible, a.video_url,
          (SELECT json_agg(json_build_object('id_archivo_activi', aa.id_archivo_activi, 'ruta_archivo', aa.ruta_archivo, 'tipo_archivo', aa.tipo_archivo)) 
           FROM archivos_actividades aa WHERE aa.id_actividad = a.id_actividad) as archivos_actividades
   FROM actividades a
