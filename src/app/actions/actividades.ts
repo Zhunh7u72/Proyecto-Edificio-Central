@@ -17,6 +17,8 @@ function buildActividadPayload(formData: FormData, tipo: string) {
   const descripcion = sanitizarTexto(formData.get('descripcion'), 5000)
   const fecha_inicio = parseFechaDatetimeLocal(formData.get('fecha_inicio'))
   const fecha_fin = parseFechaDatetimeLocal(formData.get('fecha_fin'))
+  const fecha_publicacion = parseFechaDatetimeLocal(formData.get('fecha_publicacion'))
+  const mostrar_fecha = formData.get('mostrar_fecha') === 'on'
 
   if (!titulo) return { error: 'El título es obligatorio.' as const, payload: null }
 
@@ -26,6 +28,8 @@ function buildActividadPayload(formData: FormData, tipo: string) {
     tipo,
     fecha_inicio,
     fecha_fin,
+    fecha_publicacion,
+    mostrar_fecha,
     video_url: sanitizarTexto(formData.get('video_url'), 500) || null,
   }
 
@@ -58,9 +62,9 @@ export async function crearActividad(
     let inserted = null
     try {
       const res = await query(
-        `INSERT INTO actividades (titulo, descripcion, tipo, fecha_inicio, fecha_fin, video_url, id_usuario) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id_actividad`,
-        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, payload.video_url, session.userId]
+        `INSERT INTO actividades (titulo, descripcion, tipo, fecha_inicio, fecha_fin, video_url, id_usuario, fecha_publicacion, mostrar_fecha) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, CURRENT_TIMESTAMP), $9) RETURNING id_actividad`,
+        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, payload.video_url, session.userId, payload.fecha_publicacion, payload.mostrar_fecha]
       )
       if (res.rowCount === 0) throw new Error('sin respuesta')
       inserted = res.rows[0]
@@ -98,8 +102,8 @@ export async function actualizarActividad(
 
     try {
       await query(
-        `UPDATE actividades SET titulo = $1, descripcion = $2, tipo = $3, fecha_inicio = $4, fecha_fin = $5, video_url = $6 WHERE id_actividad = $7`,
-        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, payload.video_url, id]
+        `UPDATE actividades SET titulo = $1, descripcion = $2, tipo = $3, fecha_inicio = $4, fecha_fin = $5, video_url = $6, fecha_publicacion = COALESCE($8, fecha_publicacion), mostrar_fecha = $9 WHERE id_actividad = $7`,
+        [payload.titulo, payload.descripcion, payload.tipo, payload.fecha_inicio, payload.fecha_fin, payload.video_url, id, payload.fecha_publicacion, payload.mostrar_fecha]
       )
     } catch (dbError: any) {
       return { error: 'Error al actualizar: ' + dbError.message }

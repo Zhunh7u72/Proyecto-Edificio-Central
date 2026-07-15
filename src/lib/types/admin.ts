@@ -9,6 +9,7 @@ export interface Actividad {
   url_imagen?: string | null
   url_video?: string | null
   visible?: boolean
+  mostrar_fecha?: boolean
   /** Alias de formulario / UI */
   fecha_inicio?: string | null
   video_url?: string | null

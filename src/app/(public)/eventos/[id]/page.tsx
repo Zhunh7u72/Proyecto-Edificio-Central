@@ -76,7 +76,9 @@ export default async function EventPage({ params }: EventPageProps) {
           </Link>
           <div className={styles.badgeWrapper}>
             <span className={`badge badge-${actividad.tipo.toLowerCase()}`}>{actividad.tipo}</span>
-            <span className={styles.date}>Publicado el {fechaPub}</span>
+            {(actividad.mostrar_fecha ?? true) && (
+              <span className={styles.date}>Publicado el {fechaPub}</span>
+            )}
           </div>
           <h1 className={styles.title}>{actividad.titulo}</h1>
           <p className={styles.author}>

@@ -332,6 +332,30 @@ export default function ActividadCrud({
                 </div>
               </div>
 
+              <div className={styles.formGrid} style={{ marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Fecha de publicación (Opcional)</label>
+                  <input
+                    type="datetime-local"
+                    name="fecha_publicacion"
+                    className="form-input"
+                    defaultValue={editing?.fecha_publicacion ? toDatetimeLocal(editing.fecha_publicacion) : ''}
+                  />
+                  <small className={styles.fileHint}>Si se deja vacío al crear, se usará la fecha actual.</small>
+                </div>
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', marginTop: '2rem' }}>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      name="mostrar_fecha"
+                      defaultChecked={editing ? (editing.mostrar_fecha ?? true) : true}
+                      style={{ width: '1.2rem', height: '1.2rem' }}
+                    />
+                    Mostrar fecha de publicación al público
+                  </label>
+                </div>
+              </div>
+
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-outline" onClick={closeModal}>Cancelar</button>
                 <button type="submit" className="btn btn-primary" disabled={isPending}>

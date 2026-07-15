@@ -231,6 +231,6 @@ export async function eliminarArchivoActividadIndividual(id_archivo_activi: numb
 }
 
 export const ACTIVIDADES_COLUMNS =
-  'id_actividad, id_usuario, titulo, descripcion, tipo, fecha_publicacion, fecha_inicio, fecha_fin, visible'
+  'id_actividad, id_usuario, titulo, descripcion, tipo, fecha_publicacion, fecha_inicio, fecha_fin, visible, mostrar_fecha'
 
 export const ACTIVIDADES_SELECT = `${ACTIVIDADES_COLUMNS}, archivos_actividades(id_archivo_activi, ruta_archivo, tipo_archivo)`
