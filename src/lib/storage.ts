@@ -1,10 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { promisify } from 'util'
-
-const writeFile = promisify(fs.writeFile)
-const mkdir = promisify(fs.mkdir)
-const unlink = promisify(fs.unlink)
+import { Writable } from 'stream'
 
 const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads')
 
@@ -12,15 +8,38 @@ export async function saveLocalFile(file: File, relativePath: string): Promise<s
   const fullPath = path.join(UPLOADS_DIR, relativePath)
   const dir = path.dirname(fullPath)
 
-  try {
-    await mkdir(dir, { recursive: true })
-  } catch (err: any) {
-    if (err.code !== 'EEXIST') throw err
-  }
+  await fs.promises.mkdir(dir, { recursive: true })
 
-  const arrayBuffer = await file.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
-  await writeFile(fullPath, buffer)
+  // Stream the file to disk in chunks to avoid loading it all into RAM
+  const writeStream = fs.createWriteStream(fullPath)
+
+  try {
+    const reader = file.stream().getReader()
+    const writable = new Writable({
+      write(chunk, _encoding, callback) {
+        writeStream.write(chunk, callback)
+      },
+    })
+
+    // Read chunks from the File stream and pipe to disk
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      await new Promise<void>((resolve, reject) => {
+        writable.write(value, (err) => (err ? reject(err) : resolve()))
+      })
+    }
+
+    // Close the write stream
+    await new Promise<void>((resolve, reject) => {
+      writeStream.end((err: Error | null | undefined) => (err ? reject(err) : resolve()))
+    })
+  } catch (err) {
+    writeStream.destroy()
+    // Clean up partial file
+    try { await fs.promises.unlink(fullPath) } catch {}
+    throw err
+  }
 
   return `/uploads/${relativePath}`
 }
@@ -28,10 +47,11 @@ export async function saveLocalFile(file: File, relativePath: string): Promise<s
 export async function deleteLocalFile(relativePath: string): Promise<void> {
   const fullPath = path.join(UPLOADS_DIR, relativePath)
   try {
-    await unlink(fullPath)
+    await fs.promises.unlink(fullPath)
   } catch (err: any) {
     if (err.code !== 'ENOENT') {
       console.error('Error deleting file:', err)
     }
   }
 }
+
