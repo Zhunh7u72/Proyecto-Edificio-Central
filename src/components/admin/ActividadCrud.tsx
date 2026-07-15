@@ -12,6 +12,7 @@ import type { ComentarioPublico } from '@/lib/types/comentarios'
 import type { InscripcionAdmin } from '@/lib/inscripciones-query'
 import AdminComentariosModal from '@/components/admin/AdminComentariosModal'
 import LoadingOverlay from '@/components/LoadingOverlay'
+import VideoPlayer from '@/components/VideoPlayer'
 import { ACCEPT_SOLO_IMAGENES, ETIQUETA_FORMATOS_IMAGEN, ACCEPT_SOLO_VIDEOS, ETIQUETA_FORMATOS_VIDEO } from '@/lib/archivo-constants'
 import styles from './admin.module.css'
 
@@ -275,6 +276,12 @@ export default function ActividadCrud({
                     placeholder="https://www.youtube.com/watch?v=..."
                     defaultValue={editing?.video_url ?? ''}
                   />
+                  {editing?.video_url && (
+                    <div style={{ marginTop: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '0.5rem' }}>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Vista previa del enlace actual:</p>
+                      <VideoPlayer videoUrl={editing.video_url} />
+                    </div>
+                  )}
                   <small className={styles.fileHint}>Pega un enlace de YouTube o Facebook y se reproducirá automáticamente.</small>
 
                   <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 500, marginTop: '0.75rem' }}>O sube un archivo de video</label>

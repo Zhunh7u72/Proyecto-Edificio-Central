@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getRutaImagenActividad, ActividadConArchivos } from '@/lib/actividad-archivos'
+import { getRutaImagenActividad, getRutaVideoActividad, ActividadConArchivos } from '@/lib/actividad-archivos'
 import styles from './SidePanelActivos.module.css'
 
 interface Activity extends ActividadConArchivos {
@@ -8,6 +8,7 @@ interface Activity extends ActividadConArchivos {
   tipo: string
   fecha_fin?: string | null
   url_imagen?: string | null
+  video_url?: string | null
 }
 
 export default function SidePanelActivos({ items }: { items: Activity[] }) {
@@ -32,11 +33,17 @@ export default function SidePanelActivos({ items }: { items: Activity[] }) {
         ) : (
           items.slice(0, 4).map((item) => {
             const imagen = item.url_imagen || getRutaImagenActividad(item)
+            const videoRuta = item.video_url || getRutaVideoActividad(item)
+
             return (
               <Link key={item.id_actividad} href={`/eventos/${item.id_actividad}`} className={styles.card}>
                 <div className={styles.cardImageWrapper}>
                   {imagen ? (
                     <img src={imagen} alt={item.titulo} className={styles.cardImage} loading="lazy" />
+                  ) : videoRuta ? (
+                    <div className={styles.cardImagePlaceholder} style={{ background: '#1a1a2e' }}>
+                      <span style={{ fontSize: '2rem' }}>🎥</span>
+                    </div>
                   ) : (
                     <div className={styles.cardImagePlaceholder}>
                       <span>
