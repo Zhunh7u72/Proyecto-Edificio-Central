@@ -57,8 +57,8 @@ export default function AdminSidebar() {
       <div className={styles.mobileHeader}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKsTaAxYxsfEjB4Go6B3ucJ-17d-ayMWMsGlCGDD99R8Ocx7Jh61hAm_P&s=10"
-            alt="Logo UTN"
+            src="/logo-feue.jpeg"
+            alt="Logo FEUE"
             style={{ width: '35px', height: '35px', borderRadius: '50%' }}
           />
           <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Admin Panel</h3>
@@ -77,13 +77,13 @@ export default function AdminSidebar() {
       <aside className={`${styles.sidebar} ${isMobileOpen ? styles.open : ''}`}>
         <div className={styles.sidebarHeader}>
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKsTaAxYxsfEjB4Go6B3ucJ-17d-ayMWMsGlCGDD99R8Ocx7Jh61hAm_P&s=10"
-            alt="Logo UTN"
+            src="/logo-feue.jpeg"
+            alt="Logo FEUE"
             className={styles.logo}
           />
           <div style={{ flex: 1 }}>
             <h3>Admin Panel</h3>
-            <p>Edificio Central</p>
+            <p>FEUE</p>
           </div>
           <button className={styles.hamburgerBtn} style={{ display: isMobileOpen ? 'block' : 'none' }} onClick={closeMobileMenu}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

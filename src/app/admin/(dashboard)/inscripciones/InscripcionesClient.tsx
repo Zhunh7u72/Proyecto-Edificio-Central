@@ -55,7 +55,7 @@ export default function InscripcionesClient({
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Inscripciones</h1>
         <p className={styles.pageSubtitle}>
-          Estudiantes inscritos en las actividades del Edificio Central.
+          Estudiantes inscritos en las actividades de la FEUE.
         </p>
       </div>
 

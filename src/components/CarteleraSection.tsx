@@ -12,6 +12,7 @@ export interface CarteleraActividad {
   fecha_publicacion: string
   fecha_fin: string | null
   url_imagen: string | null
+  url_video?: string | null
 }
 
 interface CarteleraSectionProps {
@@ -40,6 +41,7 @@ export default function CarteleraSection({ actividades }: CarteleraSectionProps)
                 fecha_publicacion={act.fecha_publicacion}
                 fecha_fin={act.fecha_fin}
                 url_imagen={act.url_imagen}
+                url_video={act.url_video}
               />
             </ScrollReveal>
           ))}

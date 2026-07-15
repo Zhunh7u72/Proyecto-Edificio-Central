@@ -13,7 +13,7 @@ export default async function GaleriaPage() {
         <div className="container">
           <h1 className={styles.title}>Galería</h1>
           <p className={styles.subtitle}>
-            Fotografías de las actividades y eventos del Edificio Central UTN
+            Fotografías de las actividades y eventos de la FEUE UTN
           </p>
         </div>
       </div>

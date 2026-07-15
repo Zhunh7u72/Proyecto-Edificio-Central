@@ -9,6 +9,7 @@ interface EventCardProps {
   fecha_publicacion: string
   fecha_fin: string | null
   url_imagen?: string | null
+  url_video?: string | null
 }
 
 function tipoLabel(tipo: string) {
@@ -24,6 +25,7 @@ export default function EventCard({
   fecha_publicacion,
   fecha_fin,
   url_imagen,
+  url_video,
 }: EventCardProps) {
   const fecha = new Date(fecha_publicacion)
   const dia = fecha.getDate()
@@ -40,6 +42,14 @@ export default function EventCard({
       <div className={styles.cardImageWrapper}>
         {url_imagen ? (
           <img src={url_imagen} alt={titulo} className={styles.cardImage} loading="lazy" />
+        ) : url_video ? (
+          <video 
+            src={`${url_video}#t=0.1`} 
+            preload="metadata" 
+            className={styles.cardImage} 
+            style={{ objectFit: 'cover' }} 
+            muted 
+          />
         ) : (
           <div className={styles.cardImagePlaceholder}>
             <span className={styles.cardImageIcon}>📰</span>

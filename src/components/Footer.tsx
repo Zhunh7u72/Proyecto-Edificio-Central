@@ -7,9 +7,9 @@ export default function Footer() {
         <div className={styles.footerGrid}>
         {/* Columna 1 - Sobre */}
         <div className={styles.col}>
-          <h4 className={styles.colTitle}>Edificio Central</h4>
+          <h4 className={styles.colTitle}>FEUE</h4>
           <p className={styles.colText}>
-            Portal de información, noticias y eventos del Edificio Central de la 
+            Portal de información, noticias y eventos de la FEUE de la 
             Universidad Técnica del Norte. Mantente al día con las actividades académicas.
           </p>
         </div>
@@ -40,7 +40,7 @@ export default function Footer() {
 
       <div className={styles.footerBottom}>
         <div className={styles.footerInner}>
-          <p>© {new Date().getFullYear()} Universidad Técnica del Norte — Edificio Central. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} Universidad Técnica del Norte — FEUE. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

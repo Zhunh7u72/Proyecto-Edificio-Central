@@ -54,6 +54,7 @@ export default async function HomePage() {
             fecha_publicacion: act.fecha_publicacion,
             fecha_fin: act.fecha_fin,
             url_imagen: act.url_imagen ?? null,
+            url_video: act.url_video ?? null,
           }))}
         />
       ) : !errorAgenda ? (

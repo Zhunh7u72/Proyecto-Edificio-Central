@@ -19,7 +19,7 @@ export default async function DocumentosPage() {
         <div className="container">
           <h1 className={styles.title}>Documentos Oficiales</h1>
           <p className={styles.subtitle}>
-            Descarga documentos PDF de las actividades del Edificio Central
+            Descarga documentos PDF de las actividades de la FEUE
           </p>
         </div>
       </div>

@@ -15,12 +15,12 @@ export default function LoginPage() {
       <div className={styles.loginContainer}>
         <div className={styles.loginHeader}>
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKsTaAxYxsfEjB4Go6B3ucJ-17d-ayMWMsGlCGDD99R8Ocx7Jh61hAm_P&s=10"
-            alt="Logo UTN"
+            src="/logo-feue.jpeg"
+            alt="Logo FEUE"
             className={styles.logo}
           />
           <h2>Portal Administrativo</h2>
-          <p>Edificio Central UTN</p>
+          <p>FEUE UTN</p>
         </div>
 
         {state?.error && (

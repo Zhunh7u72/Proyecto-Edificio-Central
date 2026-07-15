@@ -27,6 +27,12 @@ export function getRutaImagenActividad(actividad: ActividadConArchivos): string 
   return foto?.ruta_archivo ?? null
 }
 
+export function getRutaVideoActividad(actividad: ActividadConArchivos): string | null {
+  const archivos = actividad.archivos_actividades ?? []
+  const video = archivos.find((a) => a.tipo_archivo === TIPO_ARCHIVO_VIDEO)
+  return video?.ruta_archivo ?? null
+}
+
 export function getRutasFotosMemoria(actividad: ActividadConArchivos): string[] {
   const archivos = actividad.archivos_actividades ?? []
   return archivos
@@ -46,6 +52,7 @@ export function mapActividadConImagen<T extends ActividadConArchivos>(actividad:
   return {
     ...rest,
     url_imagen: getRutaImagenActividad(actividad),
+    url_video: getRutaVideoActividad(actividad),
   }
 }
 

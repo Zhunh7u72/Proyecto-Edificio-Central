@@ -11,7 +11,7 @@ interface ConfiguracionClientProps {
   }
 }
 
-const DEFAULT_LOGO = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKsTaAxYxsfEjB4Go6B3ucJ-17d-ayMWMsGlCGDD99R8Ocx7Jh61hAm_P&s=10'
+const DEFAULT_LOGO = '/logo-feue.jpeg'
 const DEFAULT_CARRUSEL = [
   'https://www.utn.edu.ec/wp-content/uploads/2021/06/planta-central-utn.png',
   'https://www.utn.edu.ec/wp-content/uploads/slider/cache/582999c6872cac31eb8bd19d3b1411af/planta-cental.jpg',

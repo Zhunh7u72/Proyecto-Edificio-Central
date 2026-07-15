@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import styles from './HeroSlider.module.css';
 
 const DEFAULT_IMAGES = [
-  { id: 1, src: 'https://www.utn.edu.ec/wp-content/uploads/2021/06/planta-central-utn.png', alt: 'Edificio Central' },
-  { id: 2, src: 'https://www.utn.edu.ec/wp-content/uploads/slider/cache/582999c6872cac31eb8bd19d3b1411af/planta-cental.jpg', alt: 'Edificio Central' },
+  { id: 1, src: 'https://www.utn.edu.ec/wp-content/uploads/2021/06/planta-central-utn.png', alt: 'FEUE' },
+  { id: 2, src: 'https://www.utn.edu.ec/wp-content/uploads/slider/cache/582999c6872cac31eb8bd19d3b1411af/planta-cental.jpg', alt: 'FEUE' },
   { id: 3, src: 'https://www.utn.edu.ec/wp-content/uploads/slider/cache/c8a3ff23710beddb36c5cea6593f42d1/posgrado2.jpg', alt: 'Postgrado' },
   { id: 4, src: 'https://www.utn.edu.ec/wp-content/uploads/slider/cache/88e33474650777c670250e56c3fdd8a9/biblioteca2.jpg', alt: 'Biblioteca' },
 ]

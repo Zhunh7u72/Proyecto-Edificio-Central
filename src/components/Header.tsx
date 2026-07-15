@@ -26,7 +26,7 @@ export default function Header({ logoUrl, isAuthenticated = false }: HeaderProps
     <header className={styles.header}>
       <div className={styles.topBar}>
         <div className={`container ${styles.topBarInner}`}>
-          <span>Universidad Técnica del Norte — Edificio Central</span>
+          <span>Universidad Técnica del Norte — FEUE</span>
           <div className={styles.topBarLinks}>
             <a href="https://www.utn.edu.ec" target="_blank" rel="noopener noreferrer">
               Portal UTN

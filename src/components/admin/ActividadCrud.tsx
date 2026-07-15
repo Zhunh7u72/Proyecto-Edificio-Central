@@ -281,12 +281,12 @@ export default function ActividadCrud({
                   {editing && editing.archivos_actividades && editing.archivos_actividades.filter(a => a.tipo_archivo === 'Video').length > 0 && (
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                       {editing.archivos_actividades.filter(a => a.tipo_archivo === 'Video').map(archivo => (
-                        <div key={archivo.id_archivo_activi} style={{ position: 'relative', background: '#1a1a2e', borderRadius: '8px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ color: '#fff', fontSize: '0.85rem' }}>🎥 Video subido</span>
+                        <div key={archivo.id_archivo_activi} style={{ position: 'relative', background: '#000', borderRadius: '8px', overflow: 'hidden', width: '250px' }}>
+                          <video src={archivo.ruta_archivo} controls style={{ width: '100%', display: 'block' }} />
                           <button
                             type="button"
                             onClick={() => handleDeletePhoto(archivo.id_archivo_activi!)}
-                            style={{ background: 'var(--color-danger)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                            style={{ position: 'absolute', top: 4, right: 4, background: 'var(--color-danger)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
                             title="Eliminar video"
                           >
                             ×

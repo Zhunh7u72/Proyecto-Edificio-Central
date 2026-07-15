@@ -99,7 +99,7 @@ export default function GalleryGrid({ fotos }: { fotos: FotoGaleria[] }) {
             <section className={styles.section}>
               <div className="section-title-accent" />
               <h2 className="section-title">Fotografías de actividades</h2>
-              <p className="section-subtitle">Imágenes de anuncios, eventos y capacitaciones del Edificio Central</p>
+              <p className="section-subtitle">Imágenes de anuncios, eventos y capacitaciones de la FEUE</p>
               <div className={styles.grid}>
                 {actividadFotos.map((foto) => (
                   <GalleryItem key={foto.id} foto={foto} onSelect={setSelected} />
